@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>LOL-Captions</title>
+    <meta name="viewport" content="width=device-width">
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <h1>LOL-Captions</h1>
+            <div id="userCount">Users In Lobby: <span id="counter">0</span></div>
+        </div>
+        <div class="row">
+            <div class="col col-xs-8">
+
+            </div>
+            <div id="chat" class="col col-xs-4">
+                <div id="messages"></div>
+                <form id="input-form">
+                    <input id="input" autofocus>
+                    <input id="submit" type="submit">
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="js/lib/underscore-min.js"></script>
+    <script src="js/lib/socket.io.min.js"></script>
+    <script src="js/lib/cloak-client.min.js"></script>
+    <script src="js/lib/bootstrap.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/emotes.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/custom.css">
+</body>
+
+</html>
