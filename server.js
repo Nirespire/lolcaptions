@@ -5,18 +5,15 @@ var _ = require('underscore');
 var connect = require('connect');
 //var $ = require('jQuery');
 var fs = require('fs');
+var https = require('https');
+
 
 var clientPort = 8080;
 var serverPort = 8090;
 
-var API_KEY;
+var NUM_RANDOM_IMAGES = 5;
 
-fs.readFile('client/js/auth.json', 'utf8', function (err, data) {
-    if (err) {
-        throw err;
-    }
-    API_KEY = JSON.parse(data).IMGUR_API_KEY;
-});
+var API_KEY = JSON.parse(fs.readFileSync('client/js/auth.json', 'utf8')).IMGUR_API_KEY;
 
 var userJoins = function (arg) {
     this.messageMembers('userCount', this.getMembers().length);
@@ -50,3 +47,39 @@ connect()
     .listen(clientPort);
 
 console.log('client running on on ' + clientPort);
+
+var loadRandomImages = function (API_KEY) {
+    var options = {
+        hostname: 'api.imgur.com',
+        path: '/3/gallery/random/random/1',
+        method: 'GET',
+        headers: {
+            'Authorization': "Client-ID " + API_KEY
+        }
+    };
+    
+    var req = https.request(options, function (res) {
+        console.log("retrieving random images...");
+        console.log('STATUS: ' + res.statusCode);
+        res.setEncoding('utf8');
+        var body = '';
+        res.on('data', function (chunk) {
+            body += chunk;
+        });
+        
+        res.on('end', function(){
+            console.log(
+                _.map(
+                    _.first(JSON.parse(body).data, NUM_RANDOM_IMAGES),
+                    function(item){
+                        return _.pick(item,'link');
+                    }
+                )
+            );
+        });
+    });
+    
+    req.end();
+}
+
+loadRandomImages(API_KEY);
