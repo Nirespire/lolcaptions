@@ -1,5 +1,7 @@
 # LOLCaptions
 
+[![ghit.me](https://ghit.me/badge.svg?repo=Nirespire/lolcaptions)](https://ghit.me/repo/Nirespire/lolcaptions)
+
 ## Overview
 This personal project was undertaken to remake the flash game of a similar name. 
 The last place I could find the game was [here](http://www.kongregate.com/games/gyre_o_guile/lolcaptions), but it has
