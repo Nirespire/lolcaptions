@@ -1,20 +1,9 @@
-body {
-    background: black;
-    color: white;
-    font-family: sans-serif;
-    padding: 0;
-    margin: 0;
-}
+/*
 
 h1 {
     font-weight: normal;
     padding: .5em;
     margin: 0;
-}
-
-#chat{
-    border:3px solid #FFF;
-    padding: 10px;   
 }
 
 #messages {
@@ -53,4 +42,34 @@ h1 {
 
 #userCount {
     padding: 0em 1em 1em;
+}*/
+
+html, body, #main-container, #main {
+    height:100%
+}
+
+#chat{
+    border:3px solid #FFF;
+    padding: 10px;
+    height:90%;
+    overflow-x: scroll;
+}
+
+.chat_list .list-group-item {
+    padding: 5px 4px;
+    min-height: 50px;
+}
+@media (max-width: 768px) {
+    .chat_list .list-group-item {
+        min-height: inherit;
+    }
+}
+.chat_list .list-group-item-text {
+    word-wrap: break-word;
+    display: flex;
+    overflow: auto;
+}
+.chat_list .pull-left {
+    width: 55px;
+    text-align: center;
 }
