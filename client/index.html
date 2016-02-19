@@ -21,17 +21,26 @@
             <div class="col col-xs-8">
                 <!-- GAME WINDOW -->
             </div>
-            <div id="chat" class="col col-xs-4">
 
-                <ul id="chat-messages" class="list-group">
-                </ul>
+            <div id="chat-sidebar" class="col col-xs-4">
+                <div id="chat-messages">
+                    <ul id="chat-message-list" class="list-group">
+                    </ul>
 
-                <div id="chat-input">
+                    <!-- <div id="chat-input">
                     <input id="input-box" autofocus>
                     <button id="btnSend" type="submit">Send</button>
+                    </div> -->
                 </div>
 
+                <form action="" id="chat-input">
+                    <input id="input-box" autocomplete="off" autofocus/>
+                    <button id="btnSend" type="submit">Send</button>
+                </form>
+
             </div>
+
+
         </div>
     </div>
     <!--
@@ -49,7 +58,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 
     <script src="js/lib/underscore-min.js"></script>
-    <script src="js/lib/socket.io.min.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
     <script src="js/lib/bootstrap.min.js"></script>
     <script src="js/emotes.js"></script>
     <script src="js/lib/js.cookie.js"></script>

@@ -25,7 +25,7 @@ if ('development' == env) {
 
 
 // Listen for Socket.IO Connections. Once connected, start the game logic.
-io.sockets.on('connection', function (socket) {
+io.on('connection', function (socket) {
     //console.log('client connected');
     lol.initGame(io, socket);
 });

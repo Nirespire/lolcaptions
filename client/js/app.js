@@ -1,4 +1,3 @@
-;
 jQuery(function($) {
     'use strict';
 
@@ -17,7 +16,7 @@ jQuery(function($) {
          * to the Socket.IO server
          */
         init: function() {
-            IO.socket = io.connect();
+            IO.socket = io();
             IO.bindEvents();
         },
 
@@ -35,7 +34,8 @@ jQuery(function($) {
          */
         onConnected: function() {
             // Cache a copy of the client's socket.IO session ID on the App
-            App.mySocketId = IO.socket.socket.sessionid;
+            App.mySocketId = IO.socket.id;
+            console.log(App.mySocketId);
             // console.log(data.message);
         },
 
@@ -94,7 +94,7 @@ jQuery(function($) {
         bindEvents: function() {
             //App.$doc.on('click', '#btnCreateGame', App.Host.onCreateClick);
 
-            App.$doc.on('click', '#btnSend', App.newMessage);
+            App.$doc.on('click', '#btnSend', App.sendMessage);
         },
 
         /* *************************************
@@ -114,7 +114,7 @@ jQuery(function($) {
          *         PLAYER CODE           *
          ******************************* */
 
-        newMessage: function() {
+        sendMessage: function() {
             var content = chatInput.val();
             if (content.length > 1) {
                 IO.socket.emit('newMessage', {
@@ -122,7 +122,7 @@ jQuery(function($) {
                     username: App.mySocketId,
                     content: content
                 });
-                App.createChatMessage("Me", App.cleanInput(content));
+                //App.createChatMessage("Me", App.cleanInput(content));
             }
             chatInput.val('');
         },

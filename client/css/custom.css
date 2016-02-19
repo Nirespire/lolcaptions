@@ -44,16 +44,30 @@ h1 {
     padding: 0em 1em 1em;
 }*/
 
-html, body, #main-container, #main {
+html, body, #main {
     height:100%
+}
+
+#main-container{
+    height: 90%
+}
+
+#chat-sidebar{
+    height: 100%
+}
+
+#chat-messages{
+    overflow-y: scroll;
+    height: 80%
 }
 
 #chat{
     border:3px solid #FFF;
     padding: 10px;
     height:90%;
-    overflow-x: scroll;
 }
+
+
 
 .chat_list .list-group-item {
     padding: 5px 4px;

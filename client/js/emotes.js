@@ -1,5 +1,5 @@
 /**
-    Code used from 
+    Code used from
     https://github.com/popcorncolonel/Chrome-Extensions/blob/master/Kappa%20Everywhere/contentscript.js
     Thanks to popcorncolonel  :)
 */
@@ -71,7 +71,7 @@ ignoredChannels = ['agetv1', 'gsl_standard', 'gsl', 'gomexp_2014_season_two', 'g
                    'lionheartx10', 'starladder1', 'qfmarine', 'worldclasslol', 'quinckgaming', 'ilastpack'];
 
 // please ignore this bad code yes it could have been done via regex but i feld
-// like doing something meticulous today and didn't want to change the layout 
+// like doing something meticulous today and didn't want to change the layout
 // of the program
 smilies = new Object();
 smilies[':Z'] = '//static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-b9cbb6884788aa62-24x18.png';
@@ -159,7 +159,7 @@ function get_kappa() {
 
 function get_globals() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', '//twitchemotes.com/global.json');
+    xhr.open('GET', '//twitchemotes.com/api_cache/v2/global.json');
     xhr.send();
     xhr.onload = function () {
         emote_d = JSON.parse(xhr.responseText);
@@ -177,7 +177,7 @@ function get_globals() {
 
 function get_subs() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', '//twitchemotes.com/subscriber.json');
+    xhr.open('GET', '//twitchemotes.com/api_cache/v2/subscriber.json');
     xhr.send();
     xhr.onload = function () {
         emote_d = JSON.parse(xhr.responseText);
@@ -249,7 +249,7 @@ function replace_text(element) {
         var found = false;
         //this is actually a p. cool soln. it keeps a buffer of text to save and dynamically inserts and replaces text+emotes
         //For example, This is how this function would work on "Hey Kappa Kappa Hey Kappa Kappa Hey"
-        //Read "Hey " -> replace "Kappa" -> read " " -> replace "Kappa" -> 
+        //Read "Hey " -> replace "Kappa" -> read " " -> replace "Kappa" ->
         //Read "Hey " -> replace "Kappa" -> read " " -> replace "Kappa" -> read " Hey"
         //Write the result to the DOM -> remove "Hey Kappa Kappa Hey Kappa Kappa Hey" from the DOM
         for (var i = 0; i < len; i++) {

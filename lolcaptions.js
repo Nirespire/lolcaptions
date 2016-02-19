@@ -14,16 +14,16 @@ var numUsers = 0;
 exports.initGame = function(sio, socket){
     io = sio;
     gameSocket = socket;
-    gameSocket.emit('connected', { message: "You are connected!" });
+    io.emit('connected', { message: "You are connected!" });
 
     // Host Events
     gameSocket.on('newMessage', newMessage);
 
-}
+};
 
 function newMessage(data) {
     console.log(data);
-    gameSocket.broadcast.emit('newMessage', {
+    io.emit('newMessage', {
       username: data.username,
       content: data.content
     });
