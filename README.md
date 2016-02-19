@@ -9,15 +9,17 @@ since stopped functioning. The purpose of this project is to remake that same ga
 that I would have liked to see when playing it with my friends.
 
 ## How to run
-- Clone the repo and run ```npm install``` to resolve any dependencies.
-- Run ```node server.js``` to initialize and start an instance of the game server.
-- Navigate to client/index.html in a web browser and the UI should load.
+- ```npm install```
+- ```node index.js```
+- Navigate to client/index.html
 
 ## Current Feaures
-- Multiplayer lobby run by [CloakJS](http://incompl.github.io/cloak/) and [SocketIO](http://socket.io/)
+- Multiplayer lobby and chat run by ~~[CloakJS](http://incompl.github.io/cloak/) and~~ [SocketIO](http://socket.io/)
 - Multipler chat with support for Twitch emotes thanks to [code](https://github.com/popcorncolonel/Chrome-Extensions/tree/master/Kappa%20Everywhere) form [popcorncolonel](https://github.com/popcorncolonel)
 
 ## TODO
+- Get chat working again
+- Build username register screen
 - Configure Imgur API to retreive random, captionable images
 - Configure scoring system and display
 - Build UI to display players, scores and images
