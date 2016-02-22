@@ -67,8 +67,6 @@ html, body, #main {
     height:90%;
 }
 
-
-
 .chat_list .list-group-item {
     padding: 5px 4px;
     min-height: 50px;
@@ -86,4 +84,8 @@ html, body, #main {
 .chat_list .pull-left {
     width: 55px;
     text-align: center;
+}
+
+.list-group-item-text{
+    word-wrap: break-word;
 }

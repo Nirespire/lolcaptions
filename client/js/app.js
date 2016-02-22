@@ -4,6 +4,8 @@ jQuery(function($) {
     var chatInput = $('#input-box');
     var messages = $('#chat-messages');
 
+    var MAX_NUM_CHAT_MESSAGES = 25;
+
     /**
      * All the code relevant to Socket.IO is collected in the IO namespace.
      *
@@ -25,18 +27,21 @@ jQuery(function($) {
          * by the Socket.IO server, then run the appropriate function.
          */
         bindEvents: function() {
-            IO.socket.on('connected', IO.onConnected );
+            IO.socket.on('connected', IO.onConnected);
             IO.socket.on('newMessage', IO.newMessage);
+            IO.socket.on('numUsers', IO.numUsers);
+            IO.socket.on('gameState', IO.gameState);
+            IO.socket.on('images', IO.images);
         },
 
         /**
          * The client is successfully connected!
          */
-        onConnected: function() {
+        onConnected: function(data) {
             // Cache a copy of the client's socket.IO session ID on the App
-            App.mySocketId = IO.socket.id;
-            console.log(App.mySocketId);
-            // console.log(data.message);
+            App.socketId = IO.socket.id;
+            App.username = IO.socket.id;
+            console.log(App.socketId);
         },
 
         // data.username
@@ -44,6 +49,19 @@ jQuery(function($) {
         newMessage: function(data) {
             console.log(data);
             App.createChatMessage(data.username, App.cleanInput(data.content));
+        },
+
+        numUsers: function(numUsers) {
+            $('#counter').text(numUsers);
+        },
+
+        gameState: function(gameState){
+            console.log("GAME_STATE " + gameState);
+            App.GAME_STATE = gameState;
+        },
+
+        images: function(images){
+            console.log("Got " + images.length + " Images");
         }
 
     };
@@ -59,8 +77,9 @@ jQuery(function($) {
          * each player and host. It is generated when the browser initially
          * connects to the server when the page loads for the first time.
          */
-        mySocketId: '',
-        myUsername: '',
+        socketId: '',
+        username: '',
+        GAME_STATE: null,
 
         /* *************************************
          *                Setup                *
@@ -74,6 +93,8 @@ jQuery(function($) {
             App.showInitScreen();
             App.bindEvents();
 
+            IO.socket.emit('gameState');
+
             //FastClick.attach(document.body);
         },
 
@@ -84,8 +105,9 @@ jQuery(function($) {
             App.$doc = $(document);
 
             // Templates
-            //App.$gameArea = $('#gameArea');
-            //App.$templateIntroScreen = $('#intro-screen-template').html();
+            App.$mainContainer = $('#mainContainer');
+            App.$gameArea = $('#gameArea');
+            App.$loginScreenTemplate = $('#loginTemplate');
         },
 
         /**
@@ -94,20 +116,47 @@ jQuery(function($) {
         bindEvents: function() {
             //App.$doc.on('click', '#btnCreateGame', App.Host.onCreateClick);
 
-            App.$doc.on('click', '#btnSend', App.sendMessage);
+            App.$doc.on('submit', '#chat-input', App.sendMessage);
+
+            $("#loginForm").on('click', '#loginOk', App.setUserName);
+        },
+
+        /**
+         * Show the initial Login Screen
+         */
+
+        showInitScreen: function() {
+            console.log("show init");
+
+            App.$loginScreenTemplate.dialog({
+                modal: 'true',
+                resizable: false,
+                closeOnEscape: false,
+                width: 410
+            });
+            $(".ui-dialog-titlebar").hide();
+        },
+        setUserName: function() {
+            var value = $('#usernameInput').val();
+
+            if (value.trim()) {
+                App.username = value;
+            }
+
+            $(this).closest("#loginTemplate").dialog('close');
+            // Register with the server
+            IO.socket.emit('login', {
+                socketId: App.socketId,
+                username: App.username
+            });
+            return false;
         },
 
         /* *************************************
          *             Game Logic              *
          * *********************************** */
 
-        /**
-         * Show the initial Anagrammatix Title Screen
-         * (with Start and Join buttons)
-         */
-        showInitScreen: function() {
-            console.log("show init");
-        },
+
 
 
         /* *******************************
@@ -116,15 +165,15 @@ jQuery(function($) {
 
         sendMessage: function() {
             var content = chatInput.val();
-            if (content.length > 1) {
+            if (content.length > 0) {
                 IO.socket.emit('newMessage', {
                     //username: myUsername,
-                    username: App.mySocketId,
+                    username: App.username,
                     content: content
                 });
-                //App.createChatMessage("Me", App.cleanInput(content));
             }
             chatInput.val('');
+            return false;
         },
 
 
@@ -145,16 +194,17 @@ jQuery(function($) {
         //    </ul>
         createChatMessage: function(username, content) {
 
+            var $userIcon = $('<i class="fa fa-user"> </i>');
             var $messageContent = $('<p class="list-group-item-text">')
                 .text(content);
             var $messageInfo = $('<small class="list-group-item-heading text-muted text-primary">')
                 .text(username);
 
             var $message = $('<div>')
-                .append($messageInfo, $messageContent);
+                .append($userIcon, $messageInfo, $messageContent);
 
             var $timestamp = $('<small class="pull-right text-muted">')
-                .text(new Date().toString());
+                .text(App.timestamp());
 
             var $item = $('<li class="list-group-item">')
                 .append($timestamp, $message);
@@ -165,11 +215,45 @@ jQuery(function($) {
         addMessageElement: function(el) {
             var $el = $(el);
             messages.append($el);
-            messages.scrollTop = messages[0].scrollHeight;
+            console.log(messages.children());
+            if (messages.children().length > MAX_NUM_CHAT_MESSAGES) {
+                messages.children(":first").remove();
+            }
+            messages.scrollTop(messages[0].scrollHeight);
         },
 
         cleanInput: function(input) {
             return $('<div/>').text(input).text();
+        },
+
+        timestamp: function() {
+            // Create a date object with the current time
+            var now = new Date();
+
+            // Create an array with the current month, day and time
+            var date = [now.getMonth() + 1, now.getDate(), now.getFullYear()];
+
+            // Create an array with the current hour, minute and second
+            var time = [now.getHours(), now.getMinutes(), now.getSeconds()];
+
+            // Determine AM or PM suffix based on the hour
+            var suffix = (time[0] < 12) ? "AM" : "PM";
+
+            // Convert hour from military time
+            time[0] = (time[0] < 12) ? time[0] : time[0] - 12;
+
+            // If hour is 0, set it to 12
+            time[0] = time[0] || 12;
+
+            // If seconds and minutes are less than 10, add a zero
+            for (var i = 1; i < 3; i++) {
+                if (time[i] < 10) {
+                    time[i] = "0" + time[i];
+                }
+            }
+
+            // Return the formatted string
+            return date.join("/") + " " + time.join(":") + " " + suffix;
         }
 
     };

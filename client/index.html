@@ -7,6 +7,11 @@
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="css/custom.css">
+    <link rel="stylesheet" href="css/font-awesome.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
+
 
 </head>
 
@@ -14,48 +19,42 @@
     <div id="main-container" class="container">
         <div id="top" class="row">
             <h1>LOL-Captions</h1>
-            <div id="userCount">Users In Lobby: <span id="counter">0</span></div>
         </div>
 
         <div id="main" class="row">
-            <div class="col col-xs-8">
+            <div class="col col-xs-8" id="gameArea">
                 <!-- GAME WINDOW -->
             </div>
 
-            <div id="chat-sidebar" class="col col-xs-4">
-                <div id="chat-messages">
+            <div id="chat-sidebar" class="col col-xs-4 well">
+                <div class="row" id="userCount">Users In Lobby: <span id="counter">0</span></div>
+                <div class="row" id="chat-messages">
                     <ul id="chat-message-list" class="list-group">
                     </ul>
-
-                    <!-- <div id="chat-input">
-                    <input id="input-box" autofocus>
-                    <button id="btnSend" type="submit">Send</button>
-                    </div> -->
                 </div>
-
-                <form action="" id="chat-input">
-                    <input id="input-box" autocomplete="off" autofocus/>
-                    <button id="btnSend" type="submit">Send</button>
-                </form>
-
+                <div class="row">
+                    <form action="" id="chat-input">
+                        <input id="input-box" style="min-width:80%" autocomplete="off" autofocus>
+                        <button class="btn btn-primary" id="btnSend">Send</button>
+                    </form>
+                </div>
             </div>
 
 
         </div>
     </div>
-    <!--
-    <div class="container login">
-        <ul class="pages">
-            <li class="login page">
-                <div class="form">
-                    <h3 class="title">What's your nickname?</h3>
-                    <input class="usernameInput" type="text" maxlength="14" />
-                </div>
-            </li>
-        </ul>
-    </div> -->
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <div class="container" id="loginTemplate">
+        <form id="loginForm" class="form-inline">
+            <div class="form-group">
+                <label for="usernameInput">Nickname</label>
+                <input type="text" class="form-control" id="usernameInput" maxlength="14" autocomplete="off">
+            </div>
+            <button class="btn btn-success" id="loginOk">Ok</button>
+        </form>
+    </div>
+
+
 
     <script src="js/lib/underscore-min.js"></script>
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>

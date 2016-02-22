@@ -1,14 +1,13 @@
-/**
-    Code used from
-    https://github.com/popcorncolonel/Chrome-Extensions/blob/master/Kappa%20Everywhere/contentscript.js
-    Thanks to popcorncolonel  :)
-*/
+//TODO: cache emotes, only retrive new emotes from the server when the cached ones are a day(?) old
+//      maybe when twitchemotes.com yells at me
+//TODO: get an icon that's not copywritten? if twitch mentions it. i'm not making money off this so...
 
 // some default settings
 kappa = false;
 globals = true;
 subs = true;
 bttv = false;
+mute = false;
 filter_text = '';
 filter_list = [];
 site_filter_text = '';
@@ -36,8 +35,8 @@ function replace_words() {
         get_subs();
     } else loaded3 = true;
 
-    if (bttv) {
-        get_bttv();
+	if (bttv) {
+		get_bttv();
     } else loaded4 = true;
 
     //"else, get it from some sort of cache" <- chrome storage api? limits and size and type (can dicts be values? do i need to json stringify it? Will that fit in chrome storage?)
@@ -46,17 +45,15 @@ function replace_words() {
 function do_dfs(evt) {
     // If the user specified to blacklist this site, don't do the DFS.
     cont = false;
-    for (var i = 0; i < site_filter_list.length; i++) {
-        if (location.hostname.indexOf(site_filter_list[i]) > -1)
+    for (var i=0; i < site_filter_list.length; i++) {
+        if (location.hostname.indexOf(site_filter_list[i]) > -1) {
+            cont = false;
             return;
-        cont = true;
+        }
     }
-    if (site_filter_list.length == 0) {
-        cont = true;
-    }
+    cont = true;
     if (cont && loaded1 && loaded2 && loaded3 && loaded4) {
-        //CHANGED THIS, ONLY NEED TO REPLACE WITHIN CHAT WINDOW
-        dfs(document.getElementById("chat"));
+        dfs(document.getElementById('chat-sidebar'));
     }
 }
 document.addEventListener('replaceWords', do_dfs, false);
@@ -134,107 +131,188 @@ dfsEvent.initEvent('replaceWords', true, true);
 
 function is_valid_sub_emote(emote_text) {
     return !(filter_list.indexOf(emote_text) != -1 || // if the user filters it out
-        emote_text[0].match(/[A-Z]/g) || // if it has no prefix (starts with an uppercase letter
-        emote_text.match(/^[a-z]+$/g) || // if all lowercase
-        emote_text.match(/^\d*$/g) //if just a number
-    );
+             emote_text[0].match(/[A-Z]/g) || // if it has no prefix (starts with an uppercase letter
+             emote_text.match(/^[a-z]+$/g) || // if all lowercase
+             emote_text.match(/^\d*$/g) //if just a number
+             );
 }
 
 function containsDisallowedChar(word) {
-    for (dis in disallowedChars)
-        if (word.indexOf(dis) > -1)
-            return true;
-    return false;
+	for(c in disallowedChars) {
+		if(word.indexOf(c) > -1) {
+			return true;
+        }
+    }
+	return false;
 }
 
 function get_kappa() {
     if (filter_list.indexOf('Kappa') == -1) {
-        emote_dict['Kappa'] = {
-            url: '//static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-ddc6e3a8732cb50f-25x28.png'
-        };
+        emote_dict['Kappa'] = {url:'//static-cdn.jtvnw.net/jtv_user_pictures/chansub-global-emoticon-ddc6e3a8732cb50f-25x28.png'};
         loaded1 = true;
         document.dispatchEvent(dfsEvent);
     }
 }
 
 function get_globals() {
-    var xhr = new XMLHttpRequest();
+	var xhr = new XMLHttpRequest();
     xhr.open('GET', '//twitchemotes.com/api_cache/v2/global.json');
     xhr.send();
-    xhr.onload = function () {
-        emote_d = JSON.parse(xhr.responseText);
-        for (var key in emote_d) {
-            if (filter_list.indexOf(key) == -1) {
-                emote_dict[key] = {
-                    url: emote_d[key]['url']
-                };
-            }
-        }
+    var url_template = "//static-cdn.jtvnw.net/emoticons/v1/" //{image_id}/1.0
+    function done_with_loading() {
         loaded2 = true;
-        document.dispatchEvent(dfsEvent);
+		document.dispatchEvent(dfsEvent);
+    }
+    xhr.ontimeout = function() {
+        done_with_loading();
+    };
+    xhr.onload = function() {
+		emote_d = JSON.parse(xhr.responseText)['emotes'];
+		for (var emote in emote_d) {
+            if (filter_list.indexOf(emote) == -1) {
+                emote_dict[emote] = {url: url_template + emote_d[emote]['image_id'] + '/' + '1.0'};
+            }
+		}
+        done_with_loading();
     }
 }
 
 function get_subs() {
-    var xhr = new XMLHttpRequest();
+	var xhr = new XMLHttpRequest();
     xhr.open('GET', '//twitchemotes.com/api_cache/v2/subscriber.json');
     xhr.send();
-    xhr.onload = function () {
-        emote_d = JSON.parse(xhr.responseText);
-        for (var key in emote_d) {
-            for (var key2 in emote_d[key]['emotes']) {
-                if (ignoredChannels.indexOf(key.toLowerCase()) == -1 &&
-                    is_valid_sub_emote(key2)) {
-                    emote_dict[key2] = {
-                        url: emote_d[key]['emotes'][key2],
-                        channel: key
-                    };
-                }
-            }
-        }
+    var url_template = "//static-cdn.jtvnw.net/emoticons/v1/" //{image_id}/1.0
+    function done_with_loading() {
         loaded3 = true;
-        document.dispatchEvent(dfsEvent);
+		document.dispatchEvent(dfsEvent);
     }
+    xhr.ontimeout = function() {
+        done_with_loading();
+    };
+    xhr.onload = function() {
+		emote_d = JSON.parse(xhr.responseText)['channels'];
+		for (var channel in emote_d) {
+			for (var i in emote_d[channel]['emotes']) {
+                dict = emote_d[channel]['emotes'][i]
+                var code = dict['code'];
+				if (ignoredChannels.indexOf(channel.toLowerCase()) == -1 &&
+                    is_valid_sub_emote(code)) {
+                        emote_dict[code] = {
+                            url: url_template + dict['image_id'] + '/' + '1.0',
+                            channel: channel
+                        };
+				}
+			}
+		}
+        done_with_loading();
+		document.dispatchEvent(dfsEvent);
+    }
+    /*
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '//twitchemotes.com/subscriber.json');
+    xhr.send();
+    xhr.onload = function() {
+		emote_d = JSON.parse(xhr.responseText);
+		for (var key in emote_d) {
+			for (var key2 in emote_d[key]['emotes']) {
+				if (ignoredChannels.indexOf(key.toLowerCase()) == -1 &&
+                    is_valid_sub_emote(key2)) {
+                        emote_dict[key2] = {url:emote_d[key]['emotes'][key2], channel:key};
+				}
+			}
+		}
+        loaded3 = true;
+		document.dispatchEvent(dfsEvent);
+    }
+    */
 }
 
 function get_bttv() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '//cdn.betterttv.net/emotes/emotes.json');
+	var xhr = new XMLHttpRequest();
+    xhr.open('GET', '//api.betterttv.net/2/emotes');
     xhr.send();
-    xhr.onload = function () {
-        emote_d = JSON.parse(xhr.responseText);
-        for (var key in emote_d) {
-            var word = emote_d[key]['regex'];
-            if (!containsDisallowedChar(word) &&
-                filter_list.indexOf(key) != -1) {
-                emote_dict[emote_d[key]['regex']] = {
-                    url: emote_d[key]['url']
-                };
-            }
-        }
+    var url_template = "//cdn.betterttv.net/emote/"; // {{id}}/1x
+    function done_with_loading() {
         loaded4 = true;
-        document.dispatchEvent(dfsEvent);
+		document.dispatchEvent(dfsEvent);
     }
+    xhr.ontimeout = function() {
+        done_with_loading();
+    };
+    xhr.onload = function() {
+        emote_list = JSON.parse(xhr.responseText)['emotes'];
+		for (var i in emote_list) {
+            var dict = emote_list[i];
+			if(!containsDisallowedChar(dict['code']) &&
+                filter_list.indexOf(dict['code']) == -1) {
+				emote_dict[dict['code']] = {url:url_template+dict['id']+'/'+'1x'};
+			}
+		}
+        done_with_loading();
+	}
+}
+
+function get_all_parents(elt) {
+    var a = elt;
+    var parents = [a];
+    while (a) {
+        parents.unshift(a);
+        a = a.parentNode;
+    }
+    return parents;
+}
+
+function do_not_replace(element2) {
+    //twitter hack solution. lol it's getting hackier and hackier by the second.
+    if (element2 && element2.tagName && element2.tagName.toLowerCase() == 'div') {
+        if (element2.parentElement && element2.parentElement.parentElement) {
+            if (element2.parentElement.parentElement.className.indexOf('tweet-') > -1 ||
+                element2.parentElement.parentElement.className.indexOf('normalizer') > -1)
+                return true;
+        }
+        if (element2.parentElement && element2.parentElement.parentElement && element2.parentElement.parentElement.parentElement) {
+            if (element2.parentElement.parentElement.parentElement.className.indexOf('tweet-') > -1 ||
+                element2.parentElement.parentElement.parentElement.className.indexOf('normalizer') > -1)
+                return true;
+        }
+    }
+    var want_to_exit = false;
+    get_all_parents(element2).forEach(function(elt) {
+        if (elt && elt.className && elt.className.indexOf &&
+              (elt.className.indexOf('opentip') > -1)
+            ) {
+            want_to_exit = true;
+        }
+    });
+    if (want_to_exit) {
+        return true;
+    }
+    return false;
 }
 
 function dynamically_replace(evt) {
     var element2 = evt.target;
-    //twitter hack solution
-    if (element2 && element2.tagName && element2.tagName.toLowerCase() == 'div') {
-        if (element2.parentElement.className.indexOf('tweet-box') > -1 ||
-            element2.parentElement.className.indexOf('normalizer') > -1)
+    //console.log(element2);
+    // if this site isn't being blacklisted
+    for (var i=0; i < site_filter_list.length; i++) {
+        if (location.hostname.indexOf(site_filter_list[i]) > -1) {
             return;
+        }
+    }
+
+    if (do_not_replace(element2)) {
+        return;
     }
 
     //OH GOD HOW DO I MAKE BOOLEAN LOGIC READABLE ON JAVASCRIPT PLEASE TO HELP
     if (element2 && (!element2.className ||
-            // if it's not a popup bubble on twitch chat (BTTV)
-            //maybe the worst code i've ever written? yah. oh well it works lol
-            ((element2.className && element2.className.indexOf && element2.className.indexOf('tipsy') == -1 ||
-                    (location && location.hostname && location.hostname.indexOf && location.hostname.indexOf('twitch.tv') == -1)) &&
-                //ignore twitch chat lines
-                element2.className.indexOf && element2.className.indexOf('chat-line') == -1)
-        )) {
+                    // if it's not a popup bubble on twitch chat (BTTV)
+                    //maybe the worst code i've ever written? yah. oh well it works lol
+                    ((element2.className && element2.className.indexOf && element2.className.indexOf('tipsy') == -1 ||
+                      (location && location.hostname && location.hostname.indexOf && location.hostname.indexOf('twitch.tv') == -1)) &&
+                    //ignore twitch chat lines
+                     element2.className.indexOf && element2.className.indexOf('chat-line') == -1)
+                )) {
         dfs(element2);
     }
 }
@@ -252,26 +330,34 @@ function replace_text(element) {
         //Read "Hey " -> replace "Kappa" -> read " " -> replace "Kappa" ->
         //Read "Hey " -> replace "Kappa" -> read " " -> replace "Kappa" -> read " Hey"
         //Write the result to the DOM -> remove "Hey Kappa Kappa Hey Kappa Kappa Hey" from the DOM
-        for (var i = 0; i < len; i++) {
+        for (var i=0; i < len; i++) {
             word = split[i];
             if (word in emote_dict && emote_dict[word]['url'] != undefined) {
                 var url = emote_dict[word]['url'];
                 found = true;
                 img = document.createElement('img');
                 img.src = url;
-                img.title = word;
-                img.alt = word;
-                img.setAttribute('channel', emote_dict[word]['channel']); // Useful for debug :)
+                //img.title = word;
+                //img.alt = word;
+				img.setAttribute('channel', emote_dict[word]['channel']); // Useful for debug :)
                 img.style.display = 'inline';
                 img.style.width = 'auto';
                 img.style.overflow = 'hidden';
+
+                var channel_name = emote_dict[word]['channel'];
+                if (channel_name) {
+                    channel_name = "Channel: " + channel_name;
+                }
+
                 txt = document.createTextNode(buffer);
                 parent_element.insertBefore(txt, element);
-                parent_element.insertBefore(img, element);
+                if (!mute) {
+                    parent_element.insertBefore(img, element);
+                }
                 buffer = '';
             } else {
                 buffer += word;
-                if (i == len - 1) {
+                if (i == len-1) {
                     if (buffer != element.nodeValue) {
                         txt = document.createTextNode(buffer);
                         parent_element.insertBefore(txt, element);
@@ -291,19 +377,22 @@ function replace_text(element) {
 
 function dfs(element) {
     var child, next;
-    switch (element.nodeType) {
-    case 1: //switch cases are so readable. heh. i <3 u javascript.
-    case 9:
-    case 11:
-        child = element.firstChild;
-        while (child) {
-            next = child.nextSibling;
-            dfs(child);
-            child = next;
-        }
-    case 3:
-        replace_text(element);
-        break
+    if (do_not_replace(element)) {
+        return;
+    }
+    switch(element.nodeType) {
+        case 1: //switch cases are so readable. heh. i <3 u javascript.
+        case 9:
+        case 11:
+            child = element.firstChild;
+            while (child) {
+                next = child.nextSibling;
+                dfs(child);
+                child = next;
+            }
+        case 3:
+            replace_text(element);
+            break
     }
 }
 

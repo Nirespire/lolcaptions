@@ -5,6 +5,7 @@
     "express-logger": "0.0.3",
     "express-static": "^1.0.3",
     "morgan": "^1.6.1",
+    "restler": "^3.4.0",
     "socket.io": "1.4.5",
     "underscore": "~1.5.2"
   }
