@@ -6,6 +6,15 @@ jQuery(function($) {
 
     var MAX_NUM_CHAT_MESSAGES = 25;
 
+    var GAME_STATES = {
+        WAIT: "WAIT",
+        LOAD_IMAGES: "LOAD IMAGES",
+        VOTE_IMAGES: "VOTE IMAGES",
+        SUBMIT_CAPTIONS: "SUBMIT CAPTIONS",
+        VOTE_CAPTIONS: "VOTE CAPTIONS",
+        DISPLAY_WINNER: "DISPLAY WINNER"
+    };
+
     /**
      * All the code relevant to Socket.IO is collected in the IO namespace.
      *
@@ -32,6 +41,7 @@ jQuery(function($) {
             IO.socket.on('numUsers', IO.numUsers);
             IO.socket.on('gameState', IO.gameState);
             IO.socket.on('images', IO.images);
+            IO.socket.on('updateTimer', IO.updateTimer);
         },
 
         /**
@@ -55,13 +65,22 @@ jQuery(function($) {
             $('#counter').text(numUsers);
         },
 
-        gameState: function(gameState){
+        gameState: function(gameState) {
             console.log("GAME_STATE " + gameState);
-            App.GAME_STATE = gameState;
+            App.setGameState(gameState);
         },
 
-        images: function(images){
-            console.log("Got " + images.length + " Images");
+        images: function(images) {
+            console.log("Got " + images.length + " Images")
+            console.log(images);
+            App.currentImageSet = images;
+
+            App.clearVoteImages();
+            App.populateVoteImages();
+        },
+
+        updateTimer: function(time) {
+            $('#seconds').text(time);
         }
 
     };
@@ -80,6 +99,7 @@ jQuery(function($) {
         socketId: '',
         username: '',
         GAME_STATE: null,
+        currentImageSet: [],
 
         /* *************************************
          *                Setup                *
@@ -156,6 +176,49 @@ jQuery(function($) {
          *             Game Logic              *
          * *********************************** */
 
+        setGameState(gs) {
+            switch (gs) {
+                case GAME_STATES.WAIT:
+                    $('#winner').fadeOut();
+                    $('#loadTitle').fadeOut();
+                    $('#voteImages').fadeOut();
+                    $('#captionImage').fadeOut();
+                    $('#voteCaptions').fadeOut();
+                    $('#timer').fadeOut();
+
+                    $('#waitTitle').fadeIn();
+                    break;
+                case GAME_STATES.LOAD_IMAGES:
+                    $('#waitTitle').fadeOut(function(){$('#loadTitle').fadeIn();});
+                    break;
+                case GAME_STATES.VOTE_IMAGES:
+                    $('#loadTitle').fadeOut(function(){$('#voteImages').fadeIn();$('#timer').fadeIn();});
+                    break;
+                case GAME_STATES.SUBMIT_CAPTIONS:
+                    $('#voteImages').fadeOut(function(){$('#captionImage').fadeIn();});
+                    break;
+                case GAME_STATES.VOTE_CAPTIONS:
+                    $('#captionImage').fadeOut(function(){$('#voteCaptions').fadeIn();});
+                    break;
+                case GAME_STATES.DISPLAY_WINNER:
+                    $('#voteCaptions').fadeOut(function(){$('#winner').fadeIn();$('#timer').fadeOut();});
+                    break;
+            }
+
+            this.GAME_STATE = gs;
+        },
+
+        populateVoteImages: function() {
+            for (var i in App.currentImageSet) {
+                $("#img" + i).attr('src', App.currentImageSet[i]);
+            }
+        },
+
+        clearVoteImages: function() {
+            for (var i in App.currentImageSet) {
+                $("#img" + i).attr('src', "");
+            }
+        },
 
 
 
