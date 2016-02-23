@@ -23,9 +23,12 @@ if ('development' == env) {
     app.use(expressStatic(__dirname + '/client'));
 }
 
+// Initialize the global game state
+lol.initGame(io);
 
-// Listen for Socket.IO Connections. Once connected, start the game logic.
+// Listen for Socket.IO Connections.
 io.on('connection', function (socket) {
     //console.log('client connected');
-    lol.initGame(io, socket);
+	// Bind event handling for that socket
+    lol.initSocket(socket);
 });

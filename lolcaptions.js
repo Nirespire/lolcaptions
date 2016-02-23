@@ -1,11 +1,10 @@
 var io;
-var gameSocket;
 var fs = require('fs');
 var logger = require('morgan');
 var rest = require('restler');
 
 var numUsers = 0;
-var users = [];
+var userSockets = [];
 var gameInterval;
 
 var GAME_STATES = {
@@ -20,27 +19,32 @@ var GAME_STATES = {
 var GAME_STATE = GAME_STATES.WAIT;
 
 var NUM_RANDOM_IMAGES = 5;
-var API_KEY = JSON.parse(fs.readFileSync('auth.json', 'utf8')).IMGUR_API_KEY;
-
-var gameInterval = setInterval(gameStep, 1000);
+var API_KEY;
 
 /**
  * This function is called by index.js to initialize a new game instance.
  *
  * @param sio The Socket.IO library
- * @param socket The socket object for the connected client.
  */
-exports.initGame = function(sio, socket) {
+exports.initGame = function(sio) {
     io = sio;
-    gameSocket = socket;
-    io.emit('connected');
-
-    // Host Events
-    bindEvents();
+    var gameInterval = setInterval(gameStep, 1000);
+    API_KEY = JSON.parse(fs.readFileSync('auth.json', 'utf8')).IMGUR_API_KEY;
 };
 
+exports.initSocket = function(gameSocket){
+    gameSocket.emit('connected');
+
+    var clientSocketId = gameSocket.id.substring(2);
+    userSockets[clientSocketId] = {};
+    userSockets[clientSocketId].socket = gameSocket;
+    userSockets[clientSocketId].username = "Anonymous User";
+
+    bindEvents(gameSocket);
+}
+
 function gameStep() {
-    console.log(GAME_STATE);
+    //console.log(GAME_STATE);
     switch(GAME_STATE){
         case GAME_STATES.WAIT :
             if(numUsers < 2){
@@ -69,19 +73,22 @@ function gameStep() {
     }
 }
 
-function bindEvents(){
+// gameSocket = SocketIO socket
+function bindEvents(gameSocket){
     gameSocket.on('login', login);
     gameSocket.on('newMessage', newMessage);
     gameSocket.on('disconnect', disconnect);
     gameSocket.on('gameState', gameState);
 }
 
+// data = {socketId, username}
 function login(data) {
-    users[data.socketId] = data;
+    userSockets[data.socketId].username = data.username;
     numUsers++;
     io.emit('numUsers', numUsers);
 }
 
+// data = {username, content}
 function newMessage(data) {
     console.log(data);
     io.emit('newMessage', {
@@ -90,8 +97,9 @@ function newMessage(data) {
     });
 }
 
+// data = {username, socketId}
 function disconnect(data) {
-    delete users[data.socketId];
+    delete userSockets[data.socketId];
     if (numUsers > 0) {
         numUsers--;
     }
