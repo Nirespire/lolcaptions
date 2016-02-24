@@ -7,7 +7,7 @@ var path = require('path');
 
 var app = express();
 
-var server = app.listen(process.env.PORT || 8080, function(){
+var server = app.listen(process.env.PORT || 5000, function(){
 	console.log('server is running at %s', server.address().port);
 });
 
