@@ -45,3 +45,5 @@ Temporary Items
 node_modules/
 
 auth.json
+
+.env
