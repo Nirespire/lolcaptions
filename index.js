@@ -2,10 +2,12 @@
 
 var express = require('express');
 var logger = require('morgan');
-var expressStatic = require('express-static');
 var path = require('path');
 
 var app = express();
+
+// heroku thing
+process.env.PWD = process.cwd();
 
 var server = app.listen(process.env.PORT || 8080, function(){
 	console.log('server is running at %s', server.address().port);
@@ -20,8 +22,10 @@ var lol = require('./lolcaptions');
 var env = process.env.NODE_ENV || 'development';
 if ('development' == env) {
     app.use(logger('dev'));
-    app.use(expressStatic(__dirname + '/client'));
 }
+
+app.use(express.static(process.env.PWD + '/client'));
+
 
 // Initialize the global game state
 lol.initGame(io);

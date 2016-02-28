@@ -39,7 +39,7 @@ var currentImageSet = [];
 exports.initGame = function(sio) {
     io = sio;
     var gameInterval = setInterval(gameStep, 1000);
-    API_KEY = process.env.IMGUR_API_KEY;
+    API_KEY = process.env.API_KEY;
 };
 
 exports.initSocket = function(gameSocket) {

@@ -3,10 +3,15 @@
   "dependencies": {
     "express": "^4.13.4",
     "express-logger": "0.0.3",
-    "express-static": "^1.0.3",
     "morgan": "^1.6.1",
     "restler": "^3.4.0",
     "socket.io": "1.4.5",
     "underscore": "^1.5.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Nirespire/lolcaptions.git"
+  },
+  "license" : "MIT"
+
 }
