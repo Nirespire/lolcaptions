@@ -176,7 +176,7 @@ jQuery(function($) {
          *             Game Logic              *
          * *********************************** */
 
-        setGameState(gs) {
+        setGameState: function(gs) {
             switch (gs) {
                 case GAME_STATES.WAIT:
                     $('#winner').fadeOut();

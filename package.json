@@ -1,7 +1,7 @@
 {
   "name": "LOLCaptions",
   "devDependencies": {
-    "jshint": "^2.6.0"
+    "eslint": "~2.2.0"
   },
   "dependencies": {
     "express": "^4.13.4",
@@ -16,8 +16,7 @@
     "url": "git://github.com/Nirespire/lolcaptions.git"
   },
   "scripts": {
-    "test": "./node_modules/jshint/bin/jshint index.js"
+    "lint": "./node_modules/eslint/bin/eslint.js index.js lolcaptions.js"
   },
   "license": "MIT"
-
 }
