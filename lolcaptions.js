@@ -8,17 +8,18 @@ var _ = require('underscore');
 
 var numUsers = 0;
 var userSockets = [];
+var userVotes = [];
 var gameInterval;
 
 var voteTimer = 0;
 
 var GAME_STATES = {
-    WAIT: "WAIT",
-    LOAD_IMAGES: "LOAD IMAGES",
-    VOTE_IMAGES: "VOTE IMAGES",
-    SUBMIT_CAPTIONS: "SUBMIT CAPTIONS",
-    VOTE_CAPTIONS: "VOTE CAPTIONS",
-    DISPLAY_WINNER: "DISPLAY WINNER"
+  WAIT: "WAIT",
+  LOAD_IMAGES: "LOAD IMAGES",
+  VOTE_IMAGES: "VOTE IMAGES",
+  SUBMIT_CAPTIONS: "SUBMIT CAPTIONS",
+  VOTE_CAPTIONS: "VOTE CAPTIONS",
+  DISPLAY_WINNER: "DISPLAY WINNER"
 };
 
 var GAME_STATE = GAME_STATES.WAIT;
@@ -32,6 +33,7 @@ var DISPLAY_WINNER_DURATION = 10;
 var API_KEY;
 
 var currentImageSet = [];
+var currentImageIdx = -1;
 
 /**
  * This function is called by index.js to initialize a new game instance.
@@ -39,156 +41,177 @@ var currentImageSet = [];
  * @param sio The Socket.IO library
  */
 exports.initGame = function(sio) {
-    io = sio;
-    var gameInterval = setInterval(gameStep, 1000);
-    API_KEY = process.env.API_KEY;
+  io = sio;
+  var gameInterval = setInterval(gameStep, 1000);
+  API_KEY = process.env.API_KEY;
 };
 
 exports.initSocket = function(gameSocket) {
-    gameSocket.emit('connected');
+  gameSocket.emit('connected');
 
-    switch (GAME_STATE) {
-        case GAME_STATES.WAIT:
-            break;
-        case GAME_STATES.LOAD_IMAGES:
-            break;
-        case GAME_STATES.VOTE_IMAGES:
-            gameSocket.emit('images', currentImageSet);
-            break;
-    }
+  switch (GAME_STATE) {
+    case GAME_STATES.WAIT:
+      break;
+    case GAME_STATES.LOAD_IMAGES:
+      break;
+    case GAME_STATES.VOTE_IMAGES:
+      gameSocket.emit('images', currentImageSet);
+      break;
+  }
 
-    var clientSocketId = gameSocket.id.substring(2);
-    userSockets[clientSocketId] = {};
-    userSockets[clientSocketId].socket = gameSocket;
-    userSockets[clientSocketId].username = "Anonymous User";
+  var clientSocketId = gameSocket.id.substring(2);
+  userSockets[clientSocketId] = {};
+  userSockets[clientSocketId].socket = gameSocket;
+  userSockets[clientSocketId].username = "Anonymous User";
 
-    bindEvents(gameSocket);
+  userVotes[clientSocketId] = {};
+  userVotes[clientSocketId].vote = -1;
+  userVotes[clientSocketId].caption = '';
+
+  bindEvents(gameSocket);
 }
 
 function gameStep() {
-    //console.log(GAME_STATE);
-    switch (GAME_STATE) {
-        case GAME_STATES.WAIT:
-            if (numUsers < 2) {
-                GAME_STATE = GAME_STATES.WAIT;
-                break;
-            }
+  //console.log(GAME_STATE);
+  switch (GAME_STATE) {
+    case GAME_STATES.WAIT:
+      if (numUsers < 2) {
+        GAME_STATE = GAME_STATES.WAIT;
+        break;
+      }
 
-            GAME_STATE = GAME_STATES.LOAD_IMAGES;
+      GAME_STATE = GAME_STATES.LOAD_IMAGES;
 
-            break;
-        case GAME_STATES.LOAD_IMAGES:
-            loadRandomImages()
-                .on('complete', function(data, response) {
-                    if (response.statusCode != 200) {
-                        console.error("Failed to get random images");
-                        GAME_STATE = GAME_STATES.WAIT;
-                    }
+      break;
+    case GAME_STATES.LOAD_IMAGES:
+      loadRandomImages()
+        .on('complete', function(data, response) {
+          if (response.statusCode != 200) {
+            console.error("Failed to get random images");
+            GAME_STATE = GAME_STATES.WAIT;
+          }
 
-                    currentImageSet = parseImageResults(data.data);
-                    console.log(currentImageSet);
-                    io.emit('images', currentImageSet);
-                    GAME_STATE = GAME_STATES.VOTE_IMAGES;
-                });
-            break;
-        case GAME_STATES.VOTE_IMAGES:
-            if (numUsers < 2) {
-                GAME_STATE = GAME_STATES.WAIT;
-                voteTimer = 0;
-            }
+          currentImageSet = parseImageResults(data.data);
+          console.log(currentImageSet);
+          io.emit('images', currentImageSet);
+          GAME_STATE = GAME_STATES.VOTE_IMAGES;
+        });
+      break;
+    case GAME_STATES.VOTE_IMAGES:
+      if (numUsers < 2) {
+        GAME_STATE = GAME_STATES.WAIT;
+        voteTimer = 0;
+      }
 
-            io.emit('updateTimer', IMAGE_VOTE_DURATION - voteTimer++);
+      io.emit('updateTimer', IMAGE_VOTE_DURATION - voteTimer++);
 
-            if (voteTimer > IMAGE_VOTE_DURATION) {
-                GAME_STATE = GAME_STATES.SUBMIT_CAPTIONS;
-                voteTimer = 0;
-            }
-            break;
+      if (voteTimer > IMAGE_VOTE_DURATION) {
+        countImageVotes();
+        io.emit('currentImage', currentImageSet[currentImageIdx]);
+        GAME_STATE = GAME_STATES.SUBMIT_CAPTIONS;
+        voteTimer = 0;
+      }
+      break;
 
-        case GAME_STATES.SUBMIT_CAPTIONS:
-            if (numUsers < 2) {
-                GAME_STATE = GAME_STATES.WAIT;
-                voteTimer = 0;
-            }
+    case GAME_STATES.SUBMIT_CAPTIONS:
+      if (numUsers < 2) {
+        GAME_STATE = GAME_STATES.WAIT;
+        voteTimer = 0;
+      }
 
-            io.emit('updateTimer', CAPTION_DURATION - voteTimer++);
+      io.emit('updateTimer', CAPTION_DURATION - voteTimer++);
 
-            if (voteTimer > CAPTION_DURATION) {
-                GAME_STATE = GAME_STATES.VOTE_CAPTIONS;
-                voteTimer = 0;
-            }
-            break;
+      if (voteTimer > CAPTION_DURATION) {
+        GAME_STATE = GAME_STATES.VOTE_CAPTIONS;
+        voteTimer = 0;
+      }
+      break;
 
-        case GAME_STATES.VOTE_CAPTIONS:
-            if (numUsers < 2) {
-                GAME_STATE = GAME_STATES.WAIT;
-                voteTimer = 0;
-            }
+    case GAME_STATES.VOTE_CAPTIONS:
+      if (numUsers < 2) {
+        GAME_STATE = GAME_STATES.WAIT;
+        voteTimer = 0;
+      }
 
-            io.emit('updateTimer', CAPTION_VOTE_DURATION - voteTimer++);
+      io.emit('updateTimer', CAPTION_VOTE_DURATION - voteTimer++);
 
-            if (voteTimer > CAPTION_VOTE_DURATION) {
-                GAME_STATE = GAME_STATES.DISPLAY_WINNER;
-                voteTimer = 0;
-            }
-            break;
+      if (voteTimer > CAPTION_VOTE_DURATION) {
+        GAME_STATE = GAME_STATES.DISPLAY_WINNER;
+        voteTimer = 0;
+      }
+      break;
 
-        case GAME_STATES.DISPLAY_WINNER:
+    case GAME_STATES.DISPLAY_WINNER:
 
-            io.emit('updateTimer', DISPLAY_WINNER_DURATION - voteTimer++);
+      io.emit('updateTimer', DISPLAY_WINNER_DURATION - voteTimer++);
 
-            if (voteTimer > DISPLAY_WINNER_DURATION) {
-                GAME_STATE = GAME_STATES.WAIT;
+      if (voteTimer > DISPLAY_WINNER_DURATION) {
+        GAME_STATE = GAME_STATES.WAIT;
 
-                voteTimer = 0;
-            }
-            break;
-    }
+        voteTimer = 0;
+      }
+      break;
+  }
 
-    if (PREV_GAME_STATE !== GAME_STATE) {
-        io.emit("gameState", GAME_STATE);
-    }
+  if (PREV_GAME_STATE !== GAME_STATE) {
+    io.emit("gameState", GAME_STATE);
+  }
 
-    PREV_GAME_STATE = GAME_STATE;
+  PREV_GAME_STATE = GAME_STATE;
 }
 
 // gameSocket = SocketIO socket
 function bindEvents(gameSocket) {
-    gameSocket.on('login', login);
-    gameSocket.on('newMessage', newMessage);
-    gameSocket.on('disconnect', disconnect);
-    gameSocket.on('gameState', gameState);
+  gameSocket.on('login', login);
+  gameSocket.on('newMessage', newMessage);
+  gameSocket.on('disconnect', disconnect);
+  gameSocket.on('gameState', gameState);
+  gameSocket.on('voteImage', voteImage);
+  gameSocket.on('submitCaption', submitCaption);
 }
 
 // data = {socketId, username}
 function login(data) {
-    userSockets[data.socketId].username = data.username;
-    numUsers++;
-    io.emit('numUsers', numUsers);
+  userSockets[data.socketId].username = data.username;
+  numUsers++;
+  io.emit('numUsers', numUsers);
 }
 
 // data = {username, content}
 function newMessage(data) {
-    console.log(data);
-    io.emit('newMessage', {
-        username: data.username,
-        content: data.content
-    });
+  console.log(data);
+  io.emit('newMessage', {
+    username: data.username,
+    content: data.content
+  });
 }
 
 // data = {username, socketId}
 function disconnect(data) {
-    delete userSockets[data.socketId];
-    if (numUsers > 0) {
-        numUsers--;
-    }
-    io.emit('numUsers', numUsers);
-    console.log("User disconnected");
+  delete userSockets[data.socketId];
+  delete userVotes[data.socketId];
+  if (numUsers > 0) {
+    numUsers--;
+  }
+  io.emit('numUsers', numUsers);
+  console.log("User disconnected");
 }
 
 var gameState = function() {
-    console.log(GAME_STATE);
-    io.emit('gameState', GAME_STATE);
+  console.log(GAME_STATE);
+  io.emit('gameState', GAME_STATE);
+}
+
+// data = {socketId, content(image id)}
+var voteImage = function(data) {
+  userVotes[data.socketId].vote = parseInt(data.content);
+  console.log(userVotes);
+}
+
+// data = {socketId, caption}
+var submitCaption = function(data){
+  userVotes[data.socketId].caption = data.caption;
+  console.log(userVotes);
 }
 
 
@@ -199,31 +222,52 @@ var gameState = function() {
  ************************* */
 
 function loadRandomImages() {
-    var options = {
-        headers: {
-            "Accept": "application/json",
-            "Authorization": "Client-ID " + API_KEY
-        }
+  var options = {
+    headers: {
+      "Accept": "application/json",
+      "Authorization": "Client-ID " + API_KEY
     }
+  }
 
-    return rest.get('https://api.imgur.com/3/gallery/random/random/', options);
-}
-
-function parseImageResults(imageJSON) {
-    var output = [];
-    for (i in imageJSON) {
-        var current = imageJSON[i];
-        var imageRatio = current.height / current.width;
-
-        if (current.nsfw === false && current.is_album === false && (imageRatio && imageRatio < 2 && imageRatio > 0.5) && current.animated === false) {
-
-            output.push(imageJSON[i].link);
-        }
-    }
-    return _.sample(output, NUM_RANDOM_IMAGES);
+  return rest.get('https://api.imgur.com/3/gallery/random/random/', options);
 }
 
 
 /**********************
  *   UTILITY FUNCTIONS
  ***********************/
+
+function parseImageResults(imageJSON) {
+  var output = [];
+  for (var i in imageJSON) {
+    var current = imageJSON[i];
+    var imageRatio = current.height / current.width;
+
+    if (current.nsfw === false && current.is_album === false && (imageRatio && imageRatio < 2 && imageRatio > 0.5) && current.animated === false) {
+
+      output.push(imageJSON[i].link);
+    }
+  }
+  return _.sample(output, NUM_RANDOM_IMAGES);
+}
+
+function countImageVotes() {
+  var votes = [];
+  for (var i = 0; i < NUM_RANDOM_IMAGES; i++) {
+    votes[i] = 0;
+  }
+
+  for (var i in userVotes) {
+    var currentVote = userVotes[i].vote;
+
+    if (currentVote !== -1) {
+      votes[userVotes[i].vote]++;
+    }
+  }
+
+  var winner = votes.indexOf(Math.max.apply(Math, votes));
+
+  console.log(winner);
+
+  currentImageIdx = winner;
+}

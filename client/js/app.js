@@ -42,6 +42,7 @@ jQuery(function($) {
             IO.socket.on('gameState', IO.gameState);
             IO.socket.on('images', IO.images);
             IO.socket.on('updateTimer', IO.updateTimer);
+            IO.socket.on('currentImage', IO.currentImage);
         },
 
         /**
@@ -81,6 +82,13 @@ jQuery(function($) {
 
         updateTimer: function(time) {
             $('#seconds').text(time);
+        },
+
+        currentImage: function(image){
+          console.log(image);
+          App.currentImage = image;
+          $('#currentImage').attr("src", image);
+          $('#currentImage2').attr("src", image);
         }
 
     };
@@ -100,6 +108,7 @@ jQuery(function($) {
         username: '',
         GAME_STATE: null,
         currentImageSet: [],
+        currentImage: '',
 
         /* *************************************
          *                Setup                *
@@ -139,6 +148,19 @@ jQuery(function($) {
             App.$doc.on('submit', '#chat-input', App.sendMessage);
 
             $("#loginForm").on('click', '#loginOk', App.setUserName);
+
+            $("#vote0").on('click', {id: '0'}, App.voteImage);
+            $("#vote1").on('click', {id: '1'}, App.voteImage);
+            $("#vote2").on('click', {id: '2'}, App.voteImage);
+            $("#vote3").on('click', {id: '3'}, App.voteImage);
+            $("#vote4").on('click', {id: '4'}, App.voteImage);
+            $("#vote5").on('click', {id: '5'}, App.voteImage);
+            $("#vote6").on('click', {id: '6'}, App.voteImage);
+            $("#vote7").on('click', {id: '7'}, App.voteImage);
+            $("#vote8").on('click', {id: '8'}, App.voteImage);
+
+
+            $("#captionForm").on('click', '#captionSubmit', App.submitCaption);
         },
 
         /**
@@ -237,6 +259,25 @@ jQuery(function($) {
             }
             chatInput.val('');
             return false;
+        },
+
+        // event = {data {id},...}
+        // id in [0,8] corresponding to image number clicked
+        voteImage: function(event){
+            console.log(event.data.id);
+
+            IO.socket.emit('voteImage',
+            {
+              socketId: App.socketId,
+              content: event.data.id
+            });
+        },
+
+        submitCaption: function(){
+          var caption = $('#captionInput').val();
+          console.log(caption);
+          IO.socket.emit('submitCaption', {socketId: App.socketId, caption: caption});
+          return false;
         },
 
 
