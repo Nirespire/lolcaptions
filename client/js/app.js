@@ -43,6 +43,8 @@ jQuery(function($) {
             IO.socket.on('images', IO.images);
             IO.socket.on('updateTimer', IO.updateTimer);
             IO.socket.on('currentImage', IO.currentImage);
+            IO.socket.on('captions', IO.captions);
+            IO.socket.on('winningCaption', IO.winningCaption);
         },
 
         /**
@@ -84,11 +86,32 @@ jQuery(function($) {
             $('#seconds').text(time);
         },
 
-        currentImage: function(image){
-          console.log(image);
-          App.currentImage = image;
-          $('#currentImage').attr("src", image);
-          $('#currentImage2').attr("src", image);
+        currentImage: function(image) {
+            console.log(image);
+            App.currentImage = image;
+            $('#currentImage').attr("src", image);
+            $('#currentImage2').attr("src", image);
+        },
+
+        captions: function(captions) {
+            console.log(captions);
+
+            App.currentCaptionSet = [];
+
+            for (var i in captions) {
+                App.currentCaptionSet.push(captions[i]);
+            }
+
+            App.clearVoteCaptions();
+            App.populateVoteCaptions();
+        },
+
+        winningCaption: function(caption){
+            console.log(caption);
+            App.winningCaption = caption;
+
+            App.clearCaptionedImage();
+            App.drawCaptionedImage();
         }
 
     };
@@ -109,6 +132,10 @@ jQuery(function($) {
         GAME_STATE: null,
         currentImageSet: [],
         currentImage: '',
+        currentCaptionSet: [],
+        winningCaption: '',
+        currentImageHeight: 0,
+        currentImageWidth: 0,
 
         /* *************************************
          *                Setup                *
@@ -149,16 +176,33 @@ jQuery(function($) {
 
             $("#loginForm").on('click', '#loginOk', App.setUserName);
 
-            $("#vote0").on('click', {id: '0'}, App.voteImage);
-            $("#vote1").on('click', {id: '1'}, App.voteImage);
-            $("#vote2").on('click', {id: '2'}, App.voteImage);
-            $("#vote3").on('click', {id: '3'}, App.voteImage);
-            $("#vote4").on('click', {id: '4'}, App.voteImage);
-            $("#vote5").on('click', {id: '5'}, App.voteImage);
-            $("#vote6").on('click', {id: '6'}, App.voteImage);
-            $("#vote7").on('click', {id: '7'}, App.voteImage);
-            $("#vote8").on('click', {id: '8'}, App.voteImage);
-
+            $("#vote0").on('click', {
+                id: '0'
+            }, App.voteImage);
+            $("#vote1").on('click', {
+                id: '1'
+            }, App.voteImage);
+            $("#vote2").on('click', {
+                id: '2'
+            }, App.voteImage);
+            $("#vote3").on('click', {
+                id: '3'
+            }, App.voteImage);
+            $("#vote4").on('click', {
+                id: '4'
+            }, App.voteImage);
+            $("#vote5").on('click', {
+                id: '5'
+            }, App.voteImage);
+            $("#vote6").on('click', {
+                id: '6'
+            }, App.voteImage);
+            $("#vote7").on('click', {
+                id: '7'
+            }, App.voteImage);
+            $("#vote8").on('click', {
+                id: '8'
+            }, App.voteImage);
 
             $("#captionForm").on('click', '#captionSubmit', App.submitCaption);
         },
@@ -211,19 +255,35 @@ jQuery(function($) {
                     $('#waitTitle').fadeIn();
                     break;
                 case GAME_STATES.LOAD_IMAGES:
-                    $('#waitTitle').fadeOut(function(){$('#loadTitle').fadeIn();});
+                    $('#waitTitle').fadeOut(function() {
+                        $('#loadTitle').fadeIn();
+                    });
                     break;
                 case GAME_STATES.VOTE_IMAGES:
-                    $('#loadTitle').fadeOut(function(){$('#voteImages').fadeIn();$('#timer').fadeIn();});
+                    $('#loadTitle').fadeOut(function() {
+                        $('#voteImages').fadeIn();
+                        $('#timer').fadeIn();
+                    });
                     break;
                 case GAME_STATES.SUBMIT_CAPTIONS:
-                    $('#voteImages').fadeOut(function(){$('#captionImage').fadeIn();});
+                    $('#voteImages').fadeOut(function() {
+                        $('#captionImage').fadeIn(function(){
+                            App.currentImageWidth = document.getElementById('currentImage').clientWidth;
+                            App.currentImageHeight = document.getElementById('currentImage').clientHeight;
+                            console.log(App.currentImageHeight, App.currentImageWidth);
+                        });
+                    });
                     break;
                 case GAME_STATES.VOTE_CAPTIONS:
-                    $('#captionImage').fadeOut(function(){$('#voteCaptions').fadeIn();});
+                    $('#captionImage').fadeOut(function() {
+                        $('#voteCaptions').fadeIn();
+                    });
                     break;
                 case GAME_STATES.DISPLAY_WINNER:
-                    $('#voteCaptions').fadeOut(function(){$('#winner').fadeIn();$('#timer').fadeOut();});
+                    $('#voteCaptions').fadeOut(function() {
+                        $('#winner').fadeIn();
+                        $('#timer').fadeOut();
+                    });
                     break;
             }
 
@@ -240,6 +300,28 @@ jQuery(function($) {
             for (var i in App.currentImageSet) {
                 $("#img" + i).attr('src', "");
             }
+        },
+
+        populateVoteCaptions: function() {
+
+            var list = $("<ul>").attr("id", "captionList").attr("class", "list-group");
+
+            for (var i in App.currentCaptionSet) {
+                if (App.currentCaptionSet[i] !== "") {
+                    list.append($("<li>" + App.currentCaptionSet[i] + "</li>")
+                        .attr("id", "caption" + i)
+                        .attr("class", "list-group-item")
+                        .on('click', {
+                            id: i
+                        }, App.voteCaption));
+                }
+            }
+
+            $("#captionListContainer").append(list);
+        },
+
+        clearVoteCaptions: function() {
+            $("#captionList").remove();
         },
 
 
@@ -263,21 +345,35 @@ jQuery(function($) {
 
         // event = {data {id},...}
         // id in [0,8] corresponding to image number clicked
-        voteImage: function(event){
+        voteImage: function(event) {
             console.log(event.data.id);
 
-            IO.socket.emit('voteImage',
-            {
-              socketId: App.socketId,
-              content: event.data.id
+            IO.socket.emit('voteImage', {
+                socketId: App.socketId,
+                content: event.data.id
             });
         },
 
-        submitCaption: function(){
-          var caption = $('#captionInput').val();
-          console.log(caption);
-          IO.socket.emit('submitCaption', {socketId: App.socketId, caption: caption});
-          return false;
+        submitCaption: function() {
+            var caption = $('#captionInput').val();
+            console.log(caption);
+            IO.socket.emit('submitCaption', {
+                socketId: App.socketId,
+                caption: caption
+            });
+            $('#captionInput').val("");
+            return false;
+        },
+
+        // event = {data {id},...}
+        // id in [0,8] corresponding to caption number clicked
+        voteCaption: function(event) {
+            console.log(event.data.id);
+
+            IO.socket.emit('voteCaption', {
+                socketId: App.socketId,
+                content: event.data.id
+            });
         },
 
 
@@ -355,9 +451,52 @@ jQuery(function($) {
                     time[i] = "0" + time[i];
                 }
             }
-
             // Return the formatted string
             return date.join("/") + " " + time.join(":") + " " + suffix;
+        },
+
+        clearCaptionedImage: function(){
+            var canvas = $("#winnerImage")[0];
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        },
+
+        drawCaptionedImage: function() {
+
+            var canvas = $("#winnerImage")[0];
+            var ctx = canvas.getContext('2d');
+
+            var img = document.getElementById("currentImage");
+
+            canvas.width = App.currentImageWidth;
+            canvas.height = App.currentImageHeight;
+
+            ctx.drawImage(img, 0, 0);
+
+            // Set the text style to that to which we are accustomed
+            ctx.lineWidth = 5;
+            var fontSize = 50;
+            ctx.font = fontSize + 'pt Impact';
+            ctx.strokeStyle = 'black';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.lineJoin = 'round';
+
+            var metrics = ctx.measureText(App.winningCaption.toUpperCase());
+            var textWidth = metrics.width;
+
+            while(textWidth > canvas.width){
+                fontSize--;
+                ctx.font = fontSize + 'pt Impact';
+                metrics = ctx.measureText(App.winningCaption.toUpperCase());
+                textWidth = metrics.width;
+            }
+
+            // Draw the text
+            var x = canvas.width / 2;
+            var y = canvas.height - canvas.height / 4.5;
+            ctx.strokeText(App.winningCaption.toUpperCase(), x, y);
+            ctx.fillText(App.winningCaption.toUpperCase(), x, y);
         }
 
     };
