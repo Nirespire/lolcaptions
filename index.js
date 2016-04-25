@@ -3,11 +3,13 @@ var logger = require('morgan');
 var path = require('path');
 
 var app = express();
+var PORT = process.env.PORT || 8080;
+var env = process.env.NODE_ENV || 'development';
 
 process.env.PWD = process.cwd();
 
 
-var server = app.listen(process.env.PORT || 5000, function(){
+var server = app.listen(PORT, function(){
 	console.log('server is running at %s', server.address().port);
 });
 
@@ -17,9 +19,9 @@ var fs = require('fs');
 var https = require('https');
 var lol = require('./lolcaptions');
 
-var env = process.env.NODE_ENV || 'development';
-if ('development' == env) {
+if (env === "development") {
     app.use(logger('dev'));
+	require('dotenv').config();
 }
 
 app.use(express.static(process.env.PWD + '/client'));

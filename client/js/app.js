@@ -106,7 +106,7 @@ jQuery(function($) {
             App.populateVoteCaptions();
         },
 
-        winningCaption: function(caption){
+        winningCaption: function(caption) {
             console.log(caption);
             App.winningCaption = caption;
 
@@ -151,7 +151,16 @@ jQuery(function($) {
 
             IO.socket.emit('gameState');
 
-            //FastClick.attach(document.body);
+            //$("select").imagepicker();
+
+            App.$grid = $('.grid').imagesLoaded().progress(function() {
+                App.$grid.masonry({
+                    itemSelector: '.grid-item',
+                    percentPosition: true,
+                    columnWidth: '.grid-sizer'
+                });
+            });
+
         },
 
         /**
@@ -261,13 +270,21 @@ jQuery(function($) {
                     break;
                 case GAME_STATES.VOTE_IMAGES:
                     $('#loadTitle').fadeOut(function() {
-                        $('#voteImages').fadeIn();
+                        $('#voteImages').fadeIn(function(){
+                            App.$grid = $('.grid').imagesLoaded().progress(function() {
+                                App.$grid.masonry({
+                                    itemSelector: '.grid-item',
+                                    percentPosition: true,
+                                    columnWidth: '.grid-sizer'
+                                });
+                            });
+                        });
                         $('#timer').fadeIn();
                     });
                     break;
                 case GAME_STATES.SUBMIT_CAPTIONS:
                     $('#voteImages').fadeOut(function() {
-                        $('#captionImage').fadeIn(function(){
+                        $('#captionImage').fadeIn(function() {
                             App.currentImageWidth = document.getElementById('currentImage').clientWidth;
                             App.currentImageHeight = document.getElementById('currentImage').clientHeight;
                             console.log(App.currentImageHeight, App.currentImageWidth);
@@ -291,6 +308,11 @@ jQuery(function($) {
         },
 
         populateVoteImages: function() {
+
+            if(App.$lastSelectedImage){
+                App.$lastSelectedImage.removeClass("highlighted");
+            }
+
             for (var i in App.currentImageSet) {
                 $("#img" + i).attr('src', App.currentImageSet[i]);
             }
@@ -348,6 +370,16 @@ jQuery(function($) {
         voteImage: function(event) {
             console.log(event.data.id);
 
+            var image = $("#vote"+event.data.id);
+
+            if(App.$lastSelectedImage && App.$lastSelectedImage !== image){
+                App.$lastSelectedImage.removeClass("highlighted");
+            }
+
+            image.addClass("highlighted");
+
+            App.$lastSelectedImage = image;
+
             IO.socket.emit('voteImage', {
                 socketId: App.socketId,
                 content: event.data.id
@@ -366,9 +398,19 @@ jQuery(function($) {
         },
 
         // event = {data {id},...}
-        // id in [0,8] corresponding to caption number clicked
+        // id in [0...num players since server start] corresponding to caption number clicked
         voteCaption: function(event) {
             console.log(event.data.id);
+
+            var caption = $("#caption" + event.data.id);
+
+            if(App.$lastSelectedCaption && App.$lastSelectedCaption !== caption){
+                App.$lastSelectedCaption.removeClass("active");
+            }
+
+            caption.addClass("active");
+
+            App.$lastSelectedCaption = caption;
 
             IO.socket.emit('voteCaption', {
                 socketId: App.socketId,
@@ -455,7 +497,7 @@ jQuery(function($) {
             return date.join("/") + " " + time.join(":") + " " + suffix;
         },
 
-        clearCaptionedImage: function(){
+        clearCaptionedImage: function() {
             var canvas = $("#winnerImage")[0];
             var ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -485,7 +527,7 @@ jQuery(function($) {
             var metrics = ctx.measureText(App.winningCaption.toUpperCase());
             var textWidth = metrics.width;
 
-            while(textWidth > canvas.width){
+            while (textWidth > canvas.width) {
                 fontSize--;
                 ctx.font = fontSize + 'pt Impact';
                 metrics = ctx.measureText(App.winningCaption.toUpperCase());

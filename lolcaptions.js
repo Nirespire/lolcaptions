@@ -78,6 +78,7 @@ exports.initSocket = function(gameSocket) {
 
 function gameStep() {
     //console.log(GAME_STATE);
+
     switch (GAME_STATE) {
         case GAME_STATES.WAIT:
             resetUserVotes();
@@ -94,7 +95,7 @@ function gameStep() {
             loadRandomImages()
                 .on('complete', function(data, response) {
                     if (response.statusCode != 200) {
-                        console.error("Failed to get random images");
+                        console.error(response.statusCode, "Failed to get random images");
                         //GAME_STATE = GAME_STATES.WAIT;
                     }
 
@@ -102,7 +103,9 @@ function gameStep() {
 
                     // TODO DEBUG
                     if(currentImageSet.length == 0){
-                        currentImageSet.push("http://i.imgur.com/2xxvBoV.jpg");
+                        for(var i = 0; i < 9; i++){
+                            currentImageSet.push("http://i.imgur.com/2xxvBoV.jpg");
+                        }
                     }
 
                     console.log(currentImageSet);

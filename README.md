@@ -14,21 +14,23 @@ The basic idea is you have a room of at least 2 players, and they each get to su
 ## How to run
 - ```npm install```
 - ```node index.js```
-- Client can connect to port 5000 by default
+- Client can connect to port 8080 by default
 
 ## Current Feaures
 - Multiplayer lobby and chat run by [SocketIO](http://socket.io/)
 - Multiplayer chat
 - Support for Twitch emotes thanks to [code](https://github.com/popcorncolonel/Chrome-Extensions/tree/master/Kappa%20Everywhere) form [popcorncolonel](https://github.com/popcorncolonel)
+- Game is playable but still looking rough on general looks
 
 ## TODO
 - ~~Get chat working again~~
 - ~~Build username register screen~~
 - ~~Configure Imgur API to retreive random, captionable images~~
-- Fix display of random images (size and position)
-- Build image voting system
-- Build caption submitting system
-- Build caption voting system
+- ~~Fix display of random images (size and position)~~
+- ~~Build image voting system~~
+- ~~Build caption submitting system~~
+- ~~Build caption voting system~~
 - Build scoring system
 - Build players, scores and images display
-- Build winner screen
+- ~~Build winner screen~~ sort of
+- Reorganize UI into 3 columns (caption submitting/voting, image display, chat)

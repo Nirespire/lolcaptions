@@ -11,14 +11,19 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="http://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
-
 </head>
 
 <body>
-    <div id="main-container" class="container">
-        <div id="top" class="row">
-            <h1>LOL-Captions</h1>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">LOL Captions</a>
+            </div>
         </div>
+        <!-- /.container-fluid -->
+    </nav>
+    <div id="main-container" class="container">
 
         <div id="main" class="row">
             <div class="col col-xs-8" id="gameArea">
@@ -86,50 +91,51 @@
                 <div id="voteImages" style="display:none" class="col-lg-12">
                     <h1 class="page-header">VOTE ON IMAGE FOR NEXT ROUND</h1>
 
-                    <div class="row">
-                        <div class="col-lg-4 col-md-4 col-xs-4 thumb">
+                    <div class="row grid">
+                        <div class="grid-sizer"></div>
+                        <div class="grid-item thumb">
                             <a class="thumbnail" id="vote0">
-                                <img id="img0" class="img-responsive" src="http://placehold.it/400x300" alt="">
+                                <img id="img0" src="http://placehold.it/400x300" alt="">
                             </a>
                         </div>
-                        <div class="col-lg-4 col-md-4 col-xs-4 thumb">
+                        <div class="grid-item thumb">
                             <a class="thumbnail" id="vote1">
-                                <img id="img1" class="img-responsive" src="http://placehold.it/400x300" alt="">
+                                <img id="img1" src="http://placehold.it/400x300" alt="">
                             </a>
                         </div>
-                        <div class="col-lg-4 col-md-4 col-xs-4 thumb">
+                        <div class="grid-item thumb">
                             <a class="thumbnail" id="vote2">
-                                <img id="img2" class="img-responsive" src="http://placehold.it/400x300" alt="">
+                                <img id="img2" src="http://placehold.it/400x300" alt="">
                             </a>
                         </div>
-                        <div class="col-lg-4 col-md-4 col-xs-4 thumb">
+                        <div class="grid-item thumb">
                             <a class="thumbnail" id="vote3">
-                                <img id="img3" class="img-responsive" src="http://placehold.it/400x300" alt="">
+                                <img id="img3" src="http://placehold.it/400x300" alt="">
                             </a>
                         </div>
-                        <div class="col-lg-4 col-md-4 col-xs-4 thumb">
+                        <div class="grid-item thumb">
                             <a class="thumbnail" id="vote4">
-                                <img id="img4" class="img-responsive" src="http://placehold.it/400x300" alt="">
+                                <img id="img4" src="http://placehold.it/400x300" alt="">
                             </a>
                         </div>
-                        <div class="col-lg-4 col-md-4 col-xs-4 thumb">
+                        <div class="grid-item thumb">
                             <a class="thumbnail" id="vote5">
-                                <img id="img5" class="img-responsive" src="http://placehold.it/400x300" alt="">
+                                <img id="img5" src="http://placehold.it/400x300" alt="">
                             </a>
                         </div>
-                        <div class="col-lg-4 col-md-4 col-xs-4 thumb">
+                        <div class="grid-item thumb">
                             <a class="thumbnail" id="vote6">
-                                <img id="img6" class="img-responsive" src="http://placehold.it/400x300" alt="">
+                                <img id="img6" src="http://placehold.it/400x300" alt="">
                             </a>
                         </div>
-                        <div class="col-lg-4 col-md-4 col-xs-4 thumb">
+                        <div class="grid-item thumb">
                             <a class="thumbnail" id="vote7">
-                                <img id="img7" class="img-responsive" src="http://placehold.it/400x300" alt="">
+                                <img id="img7" src="http://placehold.it/400x300" alt="">
                             </a>
                         </div>
-                        <div class="col-lg-4 col-md-4 col-xs-4 thumb">
+                        <div class="grid-item thumb">
                             <a class="thumbnail" id="vote8">
-                                <img id="img8" class="img-responsive" src="http://placehold.it/400x300" alt="">
+                                <img id="img8" src="http://placehold.it/400x300" alt="">
                             </a>
                         </div>
                     </div>
@@ -171,6 +177,8 @@
     <script src="js/lib/bootstrap.min.js"></script>
     <script src="js/emotes.js"></script>
     <script src="js/lib/js.cookie.js"></script>
+    <script src="js/lib/masonry.min.js"></script>
+    <script src="js/lib/imagesloaded.min.js"></script>
     <script src="js/app.js"></script>
 </body>
 
