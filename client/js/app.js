@@ -38,7 +38,8 @@ jQuery(function($) {
         bindEvents: function() {
             IO.socket.on('connected', IO.onConnected);
             IO.socket.on('newMessage', IO.newMessage);
-            IO.socket.on('numUsers', IO.numUsers);
+            IO.socket.on('newUser', IO.newUser);
+            IO.socket.on('userDisconnected', IO.userDisconnected);
             IO.socket.on('gameState', IO.gameState);
             IO.socket.on('images', IO.images);
             IO.socket.on('updateTimer', IO.updateTimer);
@@ -57,15 +58,24 @@ jQuery(function($) {
             console.log(App.socketId);
         },
 
-        // data.username
-        // data.content
+        // data = {username, content}
         newMessage: function(data) {
             console.log(data);
             App.createChatMessage(data.username, App.cleanInput(data.content));
         },
 
-        numUsers: function(numUsers) {
-            $('#counter').text(numUsers);
+        // data = {numUsers, username, socketId}
+        newUser: function(data){
+            $('#counter').text(data.numUsers);
+
+            App.createPlayerElement(data.socketId, data.username);
+        },
+
+        // data = {numUsers, username, socketId}
+        userDisconnected: function(data){
+            console.log("user disconnected", data);
+            $('#counter').text(data.numUsers);
+            App.deletePlayerElement(data.socketId, data.username);
         },
 
         gameState: function(gameState) {
@@ -99,16 +109,19 @@ jQuery(function($) {
             App.currentCaptionSet = [];
 
             for (var i in captions) {
-                App.currentCaptionSet.push(captions[i]);
+                App.currentCaptionSet.push(captions[i].caption);
             }
 
             App.clearVoteCaptions();
             App.populateVoteCaptions();
         },
 
-        winningCaption: function(caption) {
-            console.log(caption);
-            App.winningCaption = caption;
+        // data = {socketId, caption, points}
+        winningCaption: function(data) {
+            console.log(data);
+            App.winningCaption = data.caption;
+
+            App.incrementPlayerScore(data.socketId, data.points);
 
             App.clearCaptionedImage();
             App.drawCaptionedImage();
@@ -469,6 +482,26 @@ jQuery(function($) {
             App.addMessageElement($item);
         },
 
+        // <tr id=socketID>
+        //     <th scope="row">Username</td>
+        //     <td>Score</td>
+        // </tr>
+        createPlayerElement: function(socketID, username){
+            var tableRow = $("<tr id="+ socketID +"></tr>");
+            tableRow.attr("id",socketID);
+
+            var th = $("<th scope=row>" + username + "</th>");
+            var td = $("<td id="+socketID+"score>0</td>");
+
+            tableRow.append(th, td);
+
+            App.addPlayerElement(tableRow);
+        },
+
+        deletePlayerElement: function(socketID, username){
+            $('#' + socketID).remove();
+        },
+
         addMessageElement: function(el) {
             var $el = $(el);
             messages.append($el);
@@ -477,6 +510,20 @@ jQuery(function($) {
                 messages.children(":first").remove();
             }
             messages.scrollTop(messages[0].scrollHeight);
+        },
+
+        addPlayerElement: function(el){
+            var $el = $(el);
+            $('#playerList').append($el);
+            $('#playerList').scrollTop($('#playerList')[0].scrollHeight);
+        },
+
+        incrementPlayerScore: function(socketId, points){
+            console.log(socketId, points);
+            var el = $("#"+socketId+"score");
+            var newScore = parseInt(el.text())+points;
+
+            el.text(newScore);
         },
 
         cleanInput: function(input) {

@@ -24,19 +24,29 @@ var GAME_STATES = {
 
 var GAME_STATE = GAME_STATES.WAIT;
 var PREV_GAME_STATE = null;
+var API_KEY;
 
 var NUM_RANDOM_IMAGES = 9;
-var IMAGE_VOTE_DURATION = 100000;
+var IMAGE_VOTE_DURATION = 15;
 var CAPTION_DURATION = 15;
 var CAPTION_VOTE_DURATION = 15;
 var DISPLAY_WINNER_DURATION = 7;
-var API_KEY;
+
+
+if ((process.env.NODE_ENV || 'development') === "development") {
+    NUM_RANDOM_IMAGES = 9;
+    IMAGE_VOTE_DURATION = 10;
+    CAPTION_DURATION = 10;
+    CAPTION_VOTE_DURATION = 10;
+    DISPLAY_WINNER_DURATION = 7;
+}
 
 var currentImageSet = [];
 var currentImageIdx = -1;
 
 var currentCaptionSet = [];
 var winningCaptionIdx = -1;
+var votes = [];
 
 /**
  * This function is called by index.js to initialize a new game instance.
@@ -66,7 +76,9 @@ exports.initSocket = function(gameSocket) {
     var clientSocketId = gameSocket.id.substring(2);
     userSockets[clientSocketId] = {};
     userSockets[clientSocketId].socket = gameSocket;
+    userSockets[clientSocketId].socketId = clientSocketId;
     userSockets[clientSocketId].username = "Anonymous User";
+    userSockets[clientSocketId].score = 0;
 
     userVotes[clientSocketId] = {};
     userVotes[clientSocketId].imageVote = -1;
@@ -141,7 +153,7 @@ function gameStep() {
             if (voteTimer > CAPTION_DURATION) {
                 currentCaptionSet = [];
                 for(var i in userVotes){
-                    currentCaptionSet.push(_.pick(userVotes[i], 'caption').caption);
+                    currentCaptionSet.push({socketId: _.pick(userSockets[i], 'socketId').socketId, caption: _.pick(userVotes[i], 'caption').caption});
                 }
                 io.emit('captions', currentCaptionSet);
                 GAME_STATE = GAME_STATES.VOTE_CAPTIONS;
@@ -160,7 +172,7 @@ function gameStep() {
             if (voteTimer > CAPTION_VOTE_DURATION) {
                 winningCaptionIdx = -1;
                 countCaptionVotes();
-                io.emit('winningCaption', currentCaptionSet[winningCaptionIdx]);
+                io.emit('winningCaption', {socketId: currentCaptionSet[winningCaptionIdx].socketId, caption:currentCaptionSet[winningCaptionIdx].caption, points:votes[winningCaptionIdx]});
                 GAME_STATE = GAME_STATES.DISPLAY_WINNER;
                 voteTimer = 0;
             }
@@ -189,7 +201,22 @@ function gameStep() {
 function bindEvents(gameSocket) {
     gameSocket.on('login', login);
     gameSocket.on('newMessage', newMessage);
-    gameSocket.on('disconnect', disconnect);
+    // User anonymous function for disconnect to keep gameSocket in scope
+    gameSocket.on('disconnect', function() {
+        var socketId = gameSocket.id.substring(2);
+        var username = userSockets[socketId].username;
+
+        console.log(socketId, username);
+
+        if (numUsers > 0) {
+            numUsers--;
+        }
+
+        io.emit('userDisconnected', {numUsers: numUsers, username: username, socketId: socketId});
+
+        delete userSockets[gameSocket.id.substring(2)];
+        delete userVotes[gameSocket.id.substring(2)];
+    });
     gameSocket.on('gameState', gameState);
     gameSocket.on('voteImage', voteImage);
     gameSocket.on('submitCaption', submitCaption);
@@ -200,8 +227,11 @@ function bindEvents(gameSocket) {
 function login(data) {
     userSockets[data.socketId].username = data.username;
     numUsers++;
-    io.emit('numUsers', numUsers);
+    io.emit('newUser', {numUsers: numUsers, username: data.username, socketId: data.socketId});
 }
+
+// data = {username, socketId}
+
 
 // data = {username, content}
 function newMessage(data) {
@@ -210,17 +240,6 @@ function newMessage(data) {
         username: data.username,
         content: data.content
     });
-}
-
-// data = {username, socketId}
-function disconnect(data) {
-    delete userSockets[data.socketId];
-    delete userVotes[data.socketId];
-    if (numUsers > 0) {
-        numUsers--;
-    }
-    io.emit('numUsers', numUsers);
-    console.log("User disconnected");
 }
 
 var gameState = function() {
@@ -284,7 +303,7 @@ function parseImageResults(imageJSON) {
 }
 
 function countImageVotes() {
-    var votes = [];
+    votes = [];
     for (var i = 0; i < NUM_RANDOM_IMAGES; i++) {
         votes[i] = 0;
     }
@@ -297,6 +316,7 @@ function countImageVotes() {
         }
     }
 
+    // Index in currentImageSet of winner
     var winner = votes.indexOf(Math.max.apply(Math, votes));
 
     console.log(winner);
@@ -318,9 +338,11 @@ function countCaptionVotes() {
         }
     }
 
+    // Index in userSockets / userVotes of winner
     var winner = votes.indexOf(Math.max.apply(Math, votes));
 
     console.log(winner);
+    console.log(votes);
 
     winningCaptionIdx = winner;
 }

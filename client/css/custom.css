@@ -54,7 +54,7 @@ html, body, #main {
 
 #chat-messages{
     overflow-y: scroll;
-    height: 90%
+    height: 80%
 }
 
 #chat{
