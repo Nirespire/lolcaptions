@@ -23,17 +23,48 @@
         </div>
         <!-- /.container-fluid -->
     </nav>
-    <div id="main-container" class="container">
+    <div id="main-container" class="container" style="width:95%; max-height:90%">
 
         <div id="main" class="row">
-            <div class="col col-xs-8" id="gameArea">
-                <!-- GAME WINDOW -->
 
+            <div id="statusInfo" class="col col-xs-3">
                 <div id="timer" style="display:none">
                     <!-- TODO -->
                     <p id="seconds"></p>
                     SECONDS
                 </div>
+
+                <div id="voteImagesTitle" style="display:none">
+                    <h1 class="page-header">VOTE ON IMAGE FOR NEXT ROUND</h1>
+                </div>
+
+                <div id="captionImageTitle" style="display:none">
+                    <h1 class="page-header">CAPTION SELECTED IMAGE</h1>
+                    <div class="row">
+                        <form id="captionForm" class="form-inline">
+                            <div class="form-group">
+                                <label for="captionInput">Caption</label>
+                                <input type="text" class="form-control" id="captionInput" autocomplete="off">
+                            </div>
+                            <button class="btn btn-success" id="captionSubmit">Submit</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="voteCaptionsTitle" style="display:none">
+                    <h1 class="page-header">VOTE ON YOUR FAVORITE CAPTION</h1>
+                </div>
+
+                <div id="captionListContainerContainer">
+                    <div class="col-lg-12 col-md-12 col-xs-12" id="captionListContainer">
+                        <!-- Gets filled on each round -->
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col col-xs-6" id="gameArea">
+                <!-- GAME WINDOW -->
 
                 <div id="waitTitle" class="col-lg-12">
                     <!-- TODO replace with image  -->
@@ -47,34 +78,19 @@
 
                 <div id="captionImage" style="display:none" class="col-lg-12">
                     <!-- TODO  -->
-                    <h1 class="page-header">CAPTION SELECTED IMAGE</h1>
+
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-xs-12">
                             <img id="currentImage" class="img-responsive" src="http://placehold.it/400x300" alt="">
                         </div>
                     </div>
-                    <div class="row">
-                        <form id="captionForm" class="form-inline">
-                            <div class="form-group">
-                                <label for="captionInput">Caption</label>
-                                <input type="text" class="form-control" id="captionInput" autocomplete="off">
-                            </div>
-                            <button class="btn btn-success" id="captionSubmit">Submit</button>
-                        </form>
-                    </div>
                 </div>
 
                 <div id="voteCaptions" style="display:none" class="col-lg-12">
                     <!-- TODO -->
-                    <h1 class="page-header">VOTE ON YOUR FAVORITE CAPTION</h1>
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-xs-12">
                             <img id="currentImage2" class="img-responsive" src="http://placehold.it/400x300" alt="">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-12 col-md-12 col-xs-12" id="captionListContainer">
-
                         </div>
                     </div>
                 </div>
@@ -88,8 +104,7 @@
                     </canvas>
                 </div>
 
-                <div id="voteImages" style="display:none" class="col-lg-12">
-                    <h1 class="page-header">VOTE ON IMAGE FOR NEXT ROUND</h1>
+                <div id="voteImages" style="display:none;max-height:800px;overflow:auto" class="col-lg-12">
 
                     <div class="row grid">
                         <div class="grid-sizer"></div>
@@ -144,22 +159,77 @@
 
             </div>
 
-            <div id="chat-sidebar" class="col col-xs-4 well">
+            <div id="chat-sidebar" style="height:100%" class="col col-xs-3">
                 <div class="row" id="userCount">Users In Lobby:
                     <span id="counter">0</span>
                 </div>
-                <div class="row" id="chat-messages">
-                    <ul id="chat-message-list" class="list-group"></ul>
+                <div class="row well" style="overflow-y:auto; max-height:30%">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Player</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">1</th>
+                                    <td>Table cell</td>
+                                    <td>Table cell</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">2</th>
+                                    <td>Table cell</td>
+                                    <td>Table cell</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">2</th>
+                                    <td>Table cell</td>
+                                    <td>Table cell</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">2</th>
+                                    <td>Table cell</td>
+                                    <td>Table cell</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">2</th>
+                                    <td>Table cell</td>
+                                    <td>Table cell</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">2</th>
+                                    <td>Table cell</td>
+                                    <td>Table cell</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">2</th>
+                                    <td>Table cell</td>
+                                    <td>Table cell</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="row">
-                    <form action="" id="chat-input">
-                        <input id="input-box" style="min-width:80%" autocomplete="off" autofocus>
-                        <button class="btn btn-primary" id="btnSend">Send</button>
-                    </form>
+                <div class="row well" style="height:59%;position:relative">
+                    <div class="row" id="chat-messages">
+                        <ul id="chat-message-list" class="list-group"></ul>
+                    </div>
+                    <div class="row" style="position:absolute;width:90%;bottom:30px;">
+                        <form action="" id="chat-input">
+                            <div class="form-group">
+                                <input id="input-box" style="min-width:80%" autocomplete="off" autofocus>
+                                <button class="btn btn-primary" id="btnSend">Send</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
         </div>
+        <!-- end main row -->
     </div>
 
     <div class="container" id="loginTemplate">

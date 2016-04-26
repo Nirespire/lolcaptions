@@ -257,8 +257,11 @@ jQuery(function($) {
                     $('#winner').fadeOut();
                     $('#loadTitle').fadeOut();
                     $('#voteImages').fadeOut();
+                    $('#voteImagesTitle').fadeOut();
                     $('#captionImage').fadeOut();
+                    $('#captionImageTitle').fadeOut();
                     $('#voteCaptions').fadeOut();
+                    $('#voteCaptionsTitle').fadeOut();
                     $('#timer').fadeOut();
 
                     $('#waitTitle').fadeIn();
@@ -280,6 +283,7 @@ jQuery(function($) {
                             });
                         });
                         $('#timer').fadeIn();
+                        $('#voteImagesTitle').fadeIn();
                     });
                     break;
                 case GAME_STATES.SUBMIT_CAPTIONS:
@@ -290,10 +294,18 @@ jQuery(function($) {
                             console.log(App.currentImageHeight, App.currentImageWidth);
                         });
                     });
+                    $('#voteImagesTitle').fadeOut(function(){
+                        $('#captionImageTitle').fadeIn();
+                    });
                     break;
                 case GAME_STATES.VOTE_CAPTIONS:
                     $('#captionImage').fadeOut(function() {
                         $('#voteCaptions').fadeIn();
+                    });
+
+                    $('#captionImageTitle').fadeOut(function(){
+                        $('#voteCaptionsTitle').fadeIn();
+                        $('#captionListContainerContainer').fadeIn();
                     });
                     break;
                 case GAME_STATES.DISPLAY_WINNER:
@@ -301,6 +313,9 @@ jQuery(function($) {
                         $('#winner').fadeIn();
                         $('#timer').fadeOut();
                     });
+
+                    $('#voteCaptionsTitle').fadeOut();
+                    $('#captionListContainerContainer').fadeOut();
                     break;
             }
 

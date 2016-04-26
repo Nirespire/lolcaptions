@@ -52,13 +52,9 @@ html, body, #main {
     height: 90%
 }
 
-#chat-sidebar{
-    height: 100%
-}
-
 #chat-messages{
     overflow-y: scroll;
-    height: 80%
+    height: 90%
 }
 
 #chat{
@@ -133,4 +129,9 @@ html, body, #main {
 }
 .navbar-toggle {
     z-index:3;
+}
+
+/* center images in game area */
+.img-responsive {
+    margin: 0 auto;
 }
