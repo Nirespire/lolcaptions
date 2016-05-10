@@ -68,7 +68,7 @@ jQuery(function($) {
         newUser: function(data){
             $('#counter').text(data.numUsers);
 
-            App.createPlayerElement(data.socketId, data.username);
+            App.createPlayerElement(data.socketId, data.username, data.socketId === App.socketId);
         },
 
         // data = {numUsers, username, socketId}
@@ -247,9 +247,7 @@ jQuery(function($) {
         setUserName: function() {
             var value = $('#usernameInput').val();
 
-            if (value.trim()) {
-                App.username = value;
-            }
+            App.username = value.trim();
 
             $(this).closest("#loginTemplate").dialog('close');
             // Register with the server
@@ -272,6 +270,7 @@ jQuery(function($) {
                     $('#voteImages').fadeOut();
                     $('#voteImagesTitle').fadeOut();
                     $('#captionImage').fadeOut();
+                    $('#captionsListContainerContainer').fadeOut();
                     $('#captionImageTitle').fadeOut();
                     $('#voteCaptions').fadeOut();
                     $('#voteCaptionsTitle').fadeOut();
@@ -302,6 +301,7 @@ jQuery(function($) {
                 case GAME_STATES.SUBMIT_CAPTIONS:
                     $('#voteImages').fadeOut(function() {
                         $('#captionImage').fadeIn(function() {
+                            $('#lastInputCaption').text("");
                             App.currentImageWidth = document.getElementById('currentImage').clientWidth;
                             App.currentImageHeight = document.getElementById('currentImage').clientHeight;
                             console.log(App.currentImageHeight, App.currentImageWidth);
@@ -417,6 +417,7 @@ jQuery(function($) {
         submitCaption: function() {
             var caption = $('#captionInput').val();
             console.log(caption);
+            $('#lastInputCaption').text(caption);
             IO.socket.emit('submitCaption', {
                 socketId: App.socketId,
                 caption: caption
@@ -486,11 +487,19 @@ jQuery(function($) {
         //     <th scope="row">Username</td>
         //     <td>Score</td>
         // </tr>
-        createPlayerElement: function(socketID, username){
-            var tableRow = $("<tr id="+ socketID +"></tr>");
+        createPlayerElement: function(socketID, username, isSelf){
+            var tableRow = $("<tr></tr>");
             tableRow.attr("id",socketID);
 
-            var th = $("<th scope=row>" + username + "</th>");
+            var th;
+
+            if(isSelf) {
+                App.username = username;
+                th = $("<th scope=row>" + username + "<i class='fa fa-user'></i></th>");
+            }
+            else{
+                th = $("<th scope=row>" + username + "</th>");
+            }
             var td = $("<td id="+socketID+"score>0</td>");
 
             tableRow.append(th, td);

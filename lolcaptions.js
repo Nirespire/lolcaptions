@@ -1,19 +1,20 @@
 "use strict"
 
 var io;
-var fs = require('fs');
-var logger = require('morgan');
-var rest = require('restler');
-var _ = require('underscore');
+const logger = require('morgan');
+const rest = require('restler');
+const _ = require('underscore');
+const animals = require('./animals.js').animals;
+const adjectives = require('./adjectives.js').adjectives;
+
 
 var numUsers = 0;
-var userSockets = [];
+const userSockets = [];
 var userVotes = [];
-var gameInterval;
 
 var voteTimer = 0;
 
-var GAME_STATES = {
+const GAME_STATES = {
     WAIT: "WAIT",
     LOAD_IMAGES: "LOAD IMAGES",
     VOTE_IMAGES: "VOTE IMAGES",
@@ -35,8 +36,8 @@ var DISPLAY_WINNER_DURATION = 7;
 
 if ((process.env.NODE_ENV || 'development') === "development") {
     NUM_RANDOM_IMAGES = 9;
-    IMAGE_VOTE_DURATION = 10;
-    CAPTION_DURATION = 10;
+    IMAGE_VOTE_DURATION = 5;
+    CAPTION_DURATION = 100000;
     CAPTION_VOTE_DURATION = 10;
     DISPLAY_WINNER_DURATION = 7;
 }
@@ -55,7 +56,7 @@ var votes = [];
  */
 exports.initGame = function(sio) {
     io = sio;
-    var gameInterval = setInterval(gameStep, 1000);
+    let gameInterval = setInterval(gameStep, 1000);
     API_KEY = process.env.API_KEY;
 };
 
@@ -73,7 +74,7 @@ exports.initSocket = function(gameSocket) {
             break;
     }
 
-    var clientSocketId = gameSocket.id.substring(2);
+    let clientSocketId = gameSocket.id.substring(2);
     userSockets[clientSocketId] = {};
     userSockets[clientSocketId].socket = gameSocket;
     userSockets[clientSocketId].socketId = clientSocketId;
@@ -88,7 +89,7 @@ exports.initSocket = function(gameSocket) {
     bindEvents(gameSocket);
 }
 
-function gameStep() {
+const gameStep = () => {
     //console.log(GAME_STATE);
 
     switch (GAME_STATE) {
@@ -172,6 +173,7 @@ function gameStep() {
             if (voteTimer > CAPTION_VOTE_DURATION) {
                 winningCaptionIdx = -1;
                 countCaptionVotes();
+                console.log("winner", {socketId: currentCaptionSet[winningCaptionIdx].socketId, caption:currentCaptionSet[winningCaptionIdx].caption, points:votes[winningCaptionIdx]});
                 io.emit('winningCaption', {socketId: currentCaptionSet[winningCaptionIdx].socketId, caption:currentCaptionSet[winningCaptionIdx].caption, points:votes[winningCaptionIdx]});
                 GAME_STATE = GAME_STATES.DISPLAY_WINNER;
                 voteTimer = 0;
@@ -198,13 +200,13 @@ function gameStep() {
 }
 
 // gameSocket = SocketIO socket
-function bindEvents(gameSocket) {
+const bindEvents = (gameSocket) => {
     gameSocket.on('login', login);
     gameSocket.on('newMessage', newMessage);
     // User anonymous function for disconnect to keep gameSocket in scope
     gameSocket.on('disconnect', function() {
-        var socketId = gameSocket.id.substring(2);
-        var username = userSockets[socketId].username;
+        let socketId = gameSocket.id.substring(2);
+        let username = userSockets[socketId].username;
 
         console.log(socketId, username);
 
@@ -224,7 +226,15 @@ function bindEvents(gameSocket) {
 }
 
 // data = {socketId, username}
-function login(data) {
+const login = (data) => {
+
+    console.log(data);
+
+    if(!data.username || data.username === ""){
+        console.log("empty username!", animals.length, adjectives.length);
+        data.username = animals[Math.floor(Math.random()*animals.length-1)] + adjectives[Math.floor(Math.random()*adjectives.length-1)];
+    }
+
     userSockets[data.socketId].username = data.username;
     numUsers++;
     io.emit('newUser', {numUsers: numUsers, username: data.username, socketId: data.socketId});
@@ -234,7 +244,7 @@ function login(data) {
 
 
 // data = {username, content}
-function newMessage(data) {
+const newMessage = (data) => {
     console.log(data);
     io.emit('newMessage', {
         username: data.username,
@@ -242,45 +252,27 @@ function newMessage(data) {
     });
 }
 
-var gameState = function() {
+const gameState = () => {
     console.log(GAME_STATE);
     io.emit('gameState', GAME_STATE);
 }
 
 // data = {socketId, content(image id)}
-var voteImage = function(data) {
+const voteImage = (data) => {
     userVotes[data.socketId].imageVote = parseInt(data.content);
     console.log(userVotes);
 }
 
 // data = {socketId, caption}
-var submitCaption = function(data) {
+const submitCaption = (data) => {
     userVotes[data.socketId].caption = data.caption;
     console.log(userVotes);
 }
 
 // data = {socketId, content(caption id)}
-var voteCaption = function(data) {
+const voteCaption = (data) => {
     userVotes[data.socketId].captionVote = parseInt(data.content);
     console.log(userVotes);
-}
-
-
-/* *************************
- *                       *
- *      GAME LOGIC       *
- *                       *
- ************************* */
-
-function loadRandomImages() {
-    var options = {
-        headers: {
-            "Accept": "application/json",
-            "Authorization": "Client-ID " + API_KEY
-        }
-    }
-
-    return rest.get('https://api.imgur.com/3/gallery/random/random/', options);
 }
 
 
@@ -288,28 +280,38 @@ function loadRandomImages() {
  *   UTILITY FUNCTIONS
  ***********************/
 
-function parseImageResults(imageJSON) {
-    var output = [];
-    for (var i in imageJSON) {
-        var current = imageJSON[i];
-        var imageRatio = current.height / current.width;
+ const loadRandomImages = () => {
+     let options = {
+         headers: {
+             "Accept": "application/json",
+             "Authorization": "Client-ID " + API_KEY
+         }
+     }
+
+     return rest.get('https://api.imgur.com/3/gallery/random/random/', options);
+ }
+
+const parseImageResults = (imageJSON) => {
+    let output = [];
+    for (let i in imageJSON) {
+        let current = imageJSON[i];
+        let imageRatio = current.height / current.width;
 
         if (current.nsfw === false && current.is_album === false && (imageRatio && imageRatio < 2 && imageRatio > 0.5) && current.animated === false) {
-
             output.push(imageJSON[i].link);
         }
     }
     return _.sample(output, NUM_RANDOM_IMAGES);
 }
 
-function countImageVotes() {
+const countImageVotes = () => {
     votes = [];
-    for (var i = 0; i < NUM_RANDOM_IMAGES; i++) {
+    for (let i = 0; i < NUM_RANDOM_IMAGES; i++) {
         votes[i] = 0;
     }
 
-    for (var i in userVotes) {
-        var currentVote = userVotes[i].imageVote;
+    for (let i in userVotes) {
+        let currentVote = userVotes[i].imageVote;
 
         if (currentVote !== -1) {
             votes[userVotes[i].imageVote]++;
@@ -317,15 +319,15 @@ function countImageVotes() {
     }
 
     // Index in currentImageSet of winner
-    var winner = votes.indexOf(Math.max.apply(Math, votes));
+    let winner = votes.indexOf(Math.max.apply(Math, votes));
 
     console.log(winner);
 
     currentImageIdx = winner;
 }
 
-function countCaptionVotes() {
-    var votes = [];
+const countCaptionVotes = () => {
+    votes = [];
     for (var i = 0; i < currentCaptionSet.length; i++) {
         votes[i] = 0;
     }
@@ -340,6 +342,7 @@ function countCaptionVotes() {
 
     // Index in userSockets / userVotes of winner
     var winner = votes.indexOf(Math.max.apply(Math, votes));
+    winner = randomIndexOfMax(votes);
 
     console.log(winner);
     console.log(votes);
@@ -347,7 +350,22 @@ function countCaptionVotes() {
     winningCaptionIdx = winner;
 }
 
-function resetUserVotes(){
+const randomIndexOfMax = (array) => {
+    let maxVal = Math.max.apply(Math, votes);
+    let idxs = [];
+
+    for(let i = 0; i < array.length; ++i){
+        if(array[i] == maxVal){
+            idxs.push(i);
+        }
+    }
+
+    console.log("winning indices", idxs);
+
+    return idxs[Math.floor(Math.random()*idxs.length)];
+}
+
+const resetUserVotes = () => {
     for(var i in userVotes){
         userVotes[i].imageVote = -1;
         userVotes[i].caption = '';
