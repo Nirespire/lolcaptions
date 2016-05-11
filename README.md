@@ -2,6 +2,7 @@
 
 [![ghit.me](https://ghit.me/badge.svg?repo=Nirespire/lolcaptions)](https://ghit.me/repo/Nirespire/lolcaptions)
 [![Build Status](https://travis-ci.org/Nirespire/lolcaptions.svg?branch=master)](https://travis-ci.org/Nirespire/lolcaptions)
+[![bitHound Overall Score](https://www.bithound.io/github/Nirespire/lolcaptions/badges/score.svg)](https://www.bithound.io/github/Nirespire/lolcaptions)
 
 ## Overview
 This personal project was undertaken to remake the flash game of a similar name.
