@@ -151,7 +151,7 @@ const gameStep = () => {
                 voteTimer = 0;
             }
 
-            io.emit('updateTimer', IMAGE_VOTE_DURATION - voteTimer++);
+            io.emit('updateTimer', {maxTime: IMAGE_VOTE_DURATION, currentTime: IMAGE_VOTE_DURATION - voteTimer++});
 
             if (voteTimer > IMAGE_VOTE_DURATION) {
                 currentImageIdx = -1;
@@ -168,7 +168,7 @@ const gameStep = () => {
                 voteTimer = 0;
             }
 
-            io.emit('updateTimer', CAPTION_DURATION - voteTimer++);
+            io.emit('updateTimer', {maxTime: CAPTION_DURATION, currentTime: CAPTION_DURATION - voteTimer++});
 
             if (voteTimer > CAPTION_DURATION) {
                 currentCaptionSet = [];
@@ -187,7 +187,7 @@ const gameStep = () => {
                 voteTimer = 0;
             }
 
-            io.emit('updateTimer', CAPTION_VOTE_DURATION - voteTimer++);
+            io.emit('updateTimer', {maxTime: CAPTION_VOTE_DURATION, currentTime: CAPTION_VOTE_DURATION - voteTimer++});
 
             if (voteTimer > CAPTION_VOTE_DURATION) {
                 winningCaptionIdx = -1;
@@ -201,7 +201,7 @@ const gameStep = () => {
 
         case GAME_STATES.DISPLAY_WINNER:
 
-            io.emit('updateTimer', DISPLAY_WINNER_DURATION - voteTimer++);
+            io.emit('updateTimer', {maxTime: DISPLAY_WINNER_DURATION, currentTime: DISPLAY_WINNER_DURATION - voteTimer++});
 
             if (voteTimer > DISPLAY_WINNER_DURATION) {
                 GAME_STATE = GAME_STATES.WAIT;

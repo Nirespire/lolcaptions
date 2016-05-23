@@ -29,9 +29,9 @@
 
             <div id="statusInfo" class="col col-xs-3">
                 <div id="timer" style="display:none">
-                    <!-- TODO -->
-                    <p id="seconds"></p>
-                    SECONDS
+                    <div class="progress">
+                        <div id="timerBar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 60%;"></div>
+                    </div>
                 </div>
 
                 <div id="voteImagesTitle" style="display:none">
@@ -184,13 +184,13 @@
                     </div>
                 </div>
                 <div class="row well" style="height:59%;position:relative">
-                    <div class="row" id="chat-messages">
+                    <div class="row" id="chat-messages" style="display:block">
                         <ul id="chat-message-list" class="list-group"></ul>
                     </div>
-                    <div class="row" style="position:absolute;width:90%;bottom:30px;">
+                    <div class="row" style="width:90%;margin-top:30px;display:block">
                         <form action="" id="chat-input">
                             <div class="form-group">
-                                <input id="input-box" style="min-width:80%" autocomplete="off" autofocus>
+                                <input id="input-box" style="min-width:80%" autocomplete="off" disabled>
                                 <button class="btn btn-primary" id="btnSend">Send</button>
                             </div>
                         </form>
@@ -206,7 +206,7 @@
         <form id="loginForm" class="form-inline">
             <div class="form-group">
                 <label for="usernameInput">Nickname</label>
-                <input type="text" class="form-control" id="usernameInput" maxlength="14" autocomplete="off">
+                <input type="text" class="form-control" id="usernameInput" maxlength="14" autocomplete="off" autofocus>
             </div>
             <button class="btn btn-success" id="loginOk">Ok</button>
         </form>

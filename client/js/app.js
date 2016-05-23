@@ -93,8 +93,14 @@ jQuery(function($) {
             App.populateVoteImages();
         },
 
-        updateTimer: function(time) {
-            $('#seconds').text(time);
+        // {maxTime, currentTime}
+        updateTimer: function(timeInfo) {
+            if(App.currentMaxTime !== timeInfo.maxTime){
+                App.currentMaxTime = timeInfo.maxTime;
+                $('#timerBar').attr('aria-valuemax', timeInfo.maxTime);
+            }
+
+            $('#timerBar').attr('aria-valuenow', timeInfo.currentTime).css('width', (timeInfo.currentTime/timeInfo.maxTime) * 100 + '%').text(timeInfo.currentTime);
         },
 
         currentImage: function(image) {
@@ -150,6 +156,7 @@ jQuery(function($) {
         winningCaption: '',
         currentImageHeight: 0,
         currentImageWidth: 0,
+        currentMaxTime: -1,
 
         /* *************************************
          *                Setup                *
@@ -246,6 +253,8 @@ jQuery(function($) {
             $(".ui-dialog-titlebar").hide();
         },
         setUserName: function() {
+            // Enable chat input
+            $('#input-box').prop('disabled', false);
             var value = $('#usernameInput').val();
 
             App.username = value.trim();
@@ -472,7 +481,7 @@ jQuery(function($) {
             var $messageContent = $('<p class="list-group-item-text">')
                 .text(content);
             var $messageInfo = $('<small class="list-group-item-heading text-muted text-primary">')
-                .text(username);
+                .text("   " + username);
 
             var $message = $('<div>')
                 .append($userIcon, $messageInfo, $messageContent);
@@ -482,6 +491,10 @@ jQuery(function($) {
 
             var $item = $('<li class="list-group-item">')
                 .append($timestamp, $message);
+
+            if(App.username === username){
+                $item.css("background-color", "#fffff0");
+            }
 
             App.addMessageElement($item);
         },
