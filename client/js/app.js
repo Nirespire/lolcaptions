@@ -66,9 +66,10 @@ jQuery(function($) {
 
         // data = {numUsers, username, socketId}
         newUser: function(data){
+            console.log("newUser", data);
             $('#counter').text(data.numUsers);
 
-            App.createPlayerElement(data.socketId, data.username, data.socketId === App.socketId);
+            App.createPlayerElement(data.socketId, data.username, data.socketId === App.socketId, data.score);
         },
 
         // data = {numUsers, username, socketId}
@@ -310,6 +311,7 @@ jQuery(function($) {
                     $('#voteImagesTitle').fadeOut(function(){
                         $('#captionImageTitle').fadeIn();
                     });
+                    $('#timer').fadeIn();
                     break;
                 case GAME_STATES.VOTE_CAPTIONS:
                     $('#captionImage').fadeOut(function() {
@@ -320,6 +322,7 @@ jQuery(function($) {
                         $('#voteCaptionsTitle').fadeIn();
                         $('#captionListContainerContainer').fadeIn();
                     });
+                    $('#timer').fadeIn();
                     break;
                 case GAME_STATES.DISPLAY_WINNER:
                     $('#voteCaptions').fadeOut(function() {
@@ -487,7 +490,7 @@ jQuery(function($) {
         //     <th scope="row">Username</td>
         //     <td>Score</td>
         // </tr>
-        createPlayerElement: function(socketID, username, isSelf){
+        createPlayerElement: function(socketID, username, isSelf, score){
             var tableRow = $("<tr></tr>");
             tableRow.attr("id",socketID);
 
@@ -500,7 +503,7 @@ jQuery(function($) {
             else{
                 th = $("<th scope=row>" + username + "</th>");
             }
-            var td = $("<td id="+socketID+"score>0</td>");
+            var td = $("<td id="+socketID+"score>"+ score +"</td>");
 
             tableRow.append(th, td);
 

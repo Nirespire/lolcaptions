@@ -42,6 +42,8 @@ if ((process.env.NODE_ENV || 'development') === "development") {
     DISPLAY_WINNER_DURATION = 7;
 }
 
+const ANONYMOUS_USER = "Anonymous User";
+
 var currentImageSet = [];
 var currentImageIdx = -1;
 
@@ -72,19 +74,36 @@ exports.initSocket = function(gameSocket) {
         case GAME_STATES.VOTE_IMAGES:
             gameSocket.emit('images', currentImageSet);
             break;
+        case GAME_STATES.SUBMIT_CAPTIONS:
+            gameSocket.emit('currentImage', currentImageSet[currentImageIdx]);
+            break;
+        case GAME_STATES.VOTE_CAPTIONS:
+            gameSocket.emit('captions', currentCaptionSet);
+            break;
+        case GAME_STATES.WINNER:
+            gameSocket.emit('winningCaption', {socketId: currentCaptionSet[winningCaptionIdx].socketId, caption:currentCaptionSet[winningCaptionIdx].caption, points:votes[winningCaptionIdx]});
+            break;
     }
 
     let clientSocketId = gameSocket.id.substring(2);
     userSockets[clientSocketId] = {};
     userSockets[clientSocketId].socket = gameSocket;
     userSockets[clientSocketId].socketId = clientSocketId;
-    userSockets[clientSocketId].username = "Anonymous User";
+    userSockets[clientSocketId].username = ANONYMOUS_USER;
     userSockets[clientSocketId].score = 0;
+    userSockets[clientSocketId].loggedIn = false;
 
     userVotes[clientSocketId] = {};
     userVotes[clientSocketId].imageVote = -1;
     userVotes[clientSocketId].caption = '';
     userVotes[clientSocketId].captionVote = -1;
+
+    // Send existing players in lobby that have logged in
+    for(let socketId in userSockets){
+        if(userSockets[socketId].username != ANONYMOUS_USER){
+            gameSocket.emit('newUser', {numUsers: numUsers, username: userSockets[socketId].username, socketId: socketId, score: userSockets[socketId].score});
+        }
+    }
 
     bindEvents(gameSocket);
 }
@@ -235,9 +254,11 @@ const login = (data) => {
         data.username = animals[Math.floor(Math.random()*animals.length-1)] + adjectives[Math.floor(Math.random()*adjectives.length-1)];
     }
 
-    userSockets[data.socketId].username = data.username;
     numUsers++;
-    io.emit('newUser', {numUsers: numUsers, username: data.username, socketId: data.socketId});
+    userSockets[data.socketId].username = data.username;
+
+    // Broadcast new user to everyone
+    io.emit('newUser', {numUsers: numUsers, username: data.username, socketId: data.socketId, score: 0});
 }
 
 // data = {username, socketId}
