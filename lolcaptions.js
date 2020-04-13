@@ -2,7 +2,6 @@
 
 var io;
 const logger = require('morgan');
-const rest = require('restler');
 const _ = require('underscore');
 const animals = require('./animals.js').animals;
 const adjectives = require('./adjectives.js').adjectives;
